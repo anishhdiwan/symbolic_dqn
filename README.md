@@ -10,4 +10,5 @@ Since this project requires older versions of some packages, it is recommended t
 3. Activate the new env using `conda activate EA_env` and install the pending packages
 4. `pip install pygame=2.1.0` | `pip install pyglet==1.5.21`
 5. Find out the correct torch version for your system and GPU variant (cuda version). Install it from the [Torch Website](https://pytorch.org/)
-6. Install git via `conda install -c anaconda git` and clone this repo. You can now start playing around with our solution
+6. Install git via `conda install -c anaconda git` and clone this repo. Enable the python kernel for this environment `python -m ipykernel install --user --name=python3` and start the notebook via `jupyter notebook` 
+7. You can now start playing around with our solution
