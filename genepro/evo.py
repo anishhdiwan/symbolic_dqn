@@ -161,7 +161,6 @@ class Evolution:
         delayed(generate_random_multitree)(self.n_trees, 
           self.internal_nodes, self.leaf_nodes, max_depth=self.init_max_depth )
         for _ in range(self.pop_size))
-
     for count, individual in enumerate(self.population):
       individual.get_readable_repr()
 
