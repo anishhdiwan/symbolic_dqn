@@ -164,6 +164,9 @@ class Evolution:
     for count, individual in enumerate(self.population):
       individual.get_readable_repr()
 
+    for count, individual in enumerate(self.population):
+      individual.get_readable_repr()
+
     # evaluate the trees and store their fitness
     fitnesses = Parallel(n_jobs=self.n_jobs)(delayed(self.fitness_function)(t) for t in self.population)
     fitnesses = list(map(list, zip(*fitnesses)))
