@@ -201,6 +201,7 @@ class Evolution:
     # evaluate each offspring and store its fitness 
     fitnesses = Parallel(n_jobs=self.n_jobs)(delayed(self.fitness_function)(t) for t in offspring_population)
     fitnesses = list(map(list, zip(*fitnesses)))
+
     memories = fitnesses[1]
     memory = memories[0]
     for m in range(1,len(memories)):
@@ -210,8 +211,12 @@ class Evolution:
 
     fitnesses = fitnesses[0]
 
+    # new_population = []
     for i in range(self.pop_size):
       offspring_population[i].fitness = fitnesses[i]
+      # new_population.append(parents[i] if parents[i].fitness > fitnesses[i] else offspring_population[i])
+    # self.population = new_population
+
     # store cost
     self.num_evals += self.pop_size
     # update the population for the next iteration
@@ -242,3 +247,13 @@ class Evolution:
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1])
             ))
+        
+  def evolve_continue(self):
+    while not self._must_terminate():
+      # perform one generation
+      self._perform_generation()
+      # log info
+      if self.verbose:
+        print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
+            self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1])
+            ))        

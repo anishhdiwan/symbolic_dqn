@@ -20,6 +20,7 @@ class Multitree(nn.Module):
   def get_subtrees_consts(self):
     constants = []
     for child in self.children:
+      [node.get_value() for node in child.get_subtree() if isinstance(node, Constant)]
       constants.extend([node.pt_value for node in child.get_subtree() if isinstance(node, Constant)])
     return constants
 
