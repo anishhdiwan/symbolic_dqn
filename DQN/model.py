@@ -7,45 +7,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-
-# A class that represents an individual node
-# in a Binary Tree
-class Node:
-    def __init__(self, key):
-        self.left = None
-        self.right = None
-        self.val = key
-
-
-# A function to do preorder tree traversal
-def printPreorder(root):
-
-    if root:
-
-        # First print the data of node
-        print(root.val, end=" "),
-
-        # Then recur on left child
-        printPreorder(root.left)
-
-        # Finally recur on right child
-        printPreorder(root.right)
-
-
-class EquationTree():
-	'''
-	The EquationTree class is used to instantiate symbolic equation objects. These objects act as states in the first MDP. 
-	'''
-
-	def __init__(self):
-		self.pre_order_trav = None
-
-	def update(self, action):
-		# Update the pre-order traversal of the current state with the performed action 
-
-	def evaluate(self):
-		# Evaluate the current symbolic eq with the main_env's state to get action values for the main_env
-
 class Environment:
 	'''
 	The environment class is used to create an env object for the first markov decision process that is used to generate trees using DQN.
@@ -56,24 +17,29 @@ class Environment:
 
 	def __init__(self, main_env):
         # main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
-		self.state = EquationTree()
+		self.state = ExpressionTree()
 		self.main_env = main_env
-		self.reward = None
-		self.done = None
+		self.done = False
         self.main_env_state = None
 
 	def reset(self):
-		self.state = EquationTree()
+		self.state = ExpressionTree()
 		return self.state
 
 	def step(self, action):
-		self.state = self.state.update(action)
-        state_eval = self.state.evaluate(self.main_env_state)
-		main_env_action = select_action(state_eval)
-		reward, done = main_env.step(main_env_action)
-		self.reward = reward
-		self.done = done
-		return self.state, self.reward, self.done
+        if not self.done:
+    		self.state, tree_full = self.state.update(action)
+
+            if tree_full:
+                self.done = True
+
+            state_eval = self.state.evaluate(self.main_env_state)
+    		main_env_action = select_action(state_eval)
+    		reward, done = main_env.step(main_env_action)
+    		self.done = done
+    		return self.state, reward, self.done
+        else:
+            print ("Episode complete")
 
 
 
@@ -139,7 +105,7 @@ class DQN_Loss(nn.Module):
         super(DQN_Loss, self).__init__()
 
 
-    def forward(self, policy_net, target_net, states, actions, rewards, next_states, dones, GAMMA, large_margin=True):
+    def forward(self, policy_net, target_net, states, actions, rewards, next_states, GAMMA):
         # 1-step TD loss
         with torch.no_grad():
             next_state_max = torch.max(target_net(next_states), dim=1).values
@@ -157,7 +123,7 @@ def select_action(state, EPS, policy_net):
     if sample > EPS:
         # print("Exploiting")
         with torch.no_grad():
-            return torch.argmax(policy_net(state, for_optimization=True), dim=1).item()
+            return torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
     else:
         # print("Exploring")
         return action_names[random.choice(list(action_names.keys()))]
@@ -165,7 +131,7 @@ def select_action(state, EPS, policy_net):
 
 
 # Defining the optimization for the Q-network
-def optimize_model(optimizer, policy_net, target_net, replay_memory, demo_replay_memory, dqn_loss, BATCH_SIZE = 32, BETA = 0.5, GAMMA=0.99):
+def optimize_model(optimizer, policy_net, target_net, replay_memory, dqn_loss, BATCH_SIZE = 32, GAMMA=0.99):
     '''
     Optimize the Q-network either using the agent's self-explored replay memory or using demo data. 
     The variable BETA defines the probability of sampling from either one. This will later be replaced by some importance sampling factor
