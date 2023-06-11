@@ -25,7 +25,9 @@ class Environment:
         # main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
         self.main_env = main_env
 		
-        self.dones = [False, False, False, False]
+        # tree_full is a list containing the status of each tree in the multitree. If the tree is full (i.e no further nodes can be added) 
+        self.tree_full = [False for _ in range(main_env.action_space.n)]
+        self.done = False 
         self.tree_depth = tree_depth
 
         # Reset the main environment
@@ -34,19 +36,27 @@ class Environment:
 	def reset(self):
         n_trees = self.main_env.action_space.n # Having one tree per main env action
 		self.state = ExpressionMultiTree(self.tree_depth, n_trees)
-		return self.state
+		return self.state.vectorise_preorder_trav()
 
 	def step(self, actions):
         # actions is a list of tree additions specified by the individual policies corresponding to each tree in the multitree
         if not self.done:
-    		self.state, tree_full = self.state.update(action)
-            self.dones = tree_full
+            if False in self.tree_full:
+        		self.tree_full = self.state.update(action)
 
-            state_eval = self.state.evaluate(self.main_env_state)
-    		main_env_action = select_action(state_eval)
-    		reward, done = main_env.step(main_env_action)
-    		self.done = done
-    		return self.state, reward, self.done
+                state_eval = self.state.evaluate(self.main_env_state)
+        		main_env_action = select_action(state_eval)
+        		reward, done = main_env.step(main_env_action)
+                self.done = done
+
+                if not False in self.tree_full:
+                    self.done = True
+
+        		return self.state.vectorise_preorder_trav(), reward, self.done
+            
+            else:
+                self.done = True
+                print("All trees are full. No new additions possible")
         else:
             print ("Episode complete")
 

@@ -6,7 +6,6 @@ def init_multitree(n_trees : int):
     '''
     init_multitree generates a multitree object with the plus node as a root node and a zero constant node as the first child of the root node
     The multitree object stores a list of children that in turn recursively store a list of their children.
-    It also has a method to get the output of the multitree as outputs of its individual children (trees)
     '''
     multitree = Multitree(n_trees)
 
@@ -18,7 +17,7 @@ def init_multitree(n_trees : int):
 
 def init_tree():
     '''
-    init_tree initialises a tree as a cascading chain of node objects that contain children. These trees form the expression "+ 0" and
+    init_tree initialises a tree as a cascading chain of node objects that each contain children. These trees form the expression "+ 0" and
     serve as the starting point for DQN
     '''
     root_node = node_impl.Plus() # plus node
@@ -126,20 +125,20 @@ class ExpressionMultiTree:
 
 
 	def update(self, actions):
-		# Update the pre-order traversal with the performed actions (addition of an operator to each individual tree)
+		# Update multitree and the pre-order traversal with the performed actions (addition of an operator to each individual tree)
         assert len(actions) == len(self.multitree.n_trees), "The number of actions must be the same as the number of trees in the multitree"
 
         for i in range(len(actions)):
-            action = actions[i]
-            child_added = update_tree(self.multitree.children[i], action)
-            if not child_added:
-                self.tree_full[i] = True
+            if not self.tree_full[i]:
+                action = actions[i]
+                child_added = update_tree(self.multitree.children[i], action)
+                if not child_added:
+                    self.tree_full[i] = True
 
         
         self.multitree_preorder_travs = get_multitree_preorder_travs(self.multitree)
 
-
-        return self.vectorise_preorder_trav(self.multitree_preorder_travs), self.tree_full
+        return self.tree_full
 
 	def evaluate(self, main_env_state):
 		# Evaluate the current multitree expression with the main_env's state to get action values for the main_env
