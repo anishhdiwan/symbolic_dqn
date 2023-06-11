@@ -8,6 +8,9 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from expression_tree import *
+from node_vectors import action_names
+import copy
+
 
 class Environment:
 	'''
@@ -42,12 +45,20 @@ class Environment:
         # actions is a list of tree additions specified by the individual policies corresponding to each tree in the multitree
         if not self.done:
             if False in self.tree_full:
-        		self.tree_full = self.state.update(action)
+        		self.tree_full = self.state.update(actions)
 
                 state_eval = self.state.evaluate(self.main_env_state)
-        		main_env_action = select_action(state_eval)
-        		reward, done = main_env.step(main_env_action)
-                self.done = done
+        		main_env_action = select_main_env_action(state_eval)
+
+                rewards, dones = [], []
+                for action in range(self.main_env.action_space.n):
+                    copy_env = copy.deepcopy(self.main_env)
+                    _, reward, done, _ = copy_env.step(action)
+                    rewards.append(reward)
+                    dones.append(done)
+
+                self.main_env_state, _, _, _ = self.main_env.step(main_env_action) 
+                self.done = dones[main_env_action]
 
                 if not False in self.tree_full:
                     self.done = True
@@ -73,7 +84,7 @@ class ReplayMemory:
     They are converted to tensors during optimization
     '''
 
-    def __init__(self, capacity):
+    def __init__(self, capacity=500):
         self.memory = deque([], maxlen=capacity)
 
     def append(self, *args):
@@ -136,63 +147,85 @@ class DQN_Loss(nn.Module):
 
 
 # Defining epsilon greedy action selection
-def select_action(state, EPS, policy_net):
-    state = state.to(device)
-    sample = random.random()
-    if sample > EPS:
-        # print("Exploiting")
-        with torch.no_grad():
-            return torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
-    else:
-        # print("Exploring")
-        return action_names[random.choice(list(action_names.keys()))]
-        # return action_list[action_names[random.choice(list(action_names.keys()))]]
+def select_action(state, EPS, policy_nets):
+    actions = []
+    for i in range(len(states)):
+        state = states[i]
+        policy_net = policy_nets[i]
+        state = state.to(device)
+        sample = random.random()
+        if sample > EPS:
+            # print("Exploiting")
+            with torch.no_grad():
+                action_idx = torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
+                actions.append(action_names[action_idx])
+
+        else:
+            # print("Exploring")
+            actions.append(action_names[random.choice(list(action_names.keys()))])
+
+    return(actions)
+
+# Defining softmax actions selection for the main environment
+def select_main_env_action(state_eval):
+    actions = [0,1,2,3]
+    probabilities = F.softmax(state_eval)
+    return np.random.choice(actions, p=probabilities)
+
 
 
 # Defining the optimization for the Q-network
-def optimize_model(optimizer, policy_net, target_net, replay_memory, dqn_loss, BATCH_SIZE = 32, GAMMA=0.99):
+def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, BATCH_SIZE = 32, GAMMA=0.99):
     '''
-    Optimize the Q-network either using the agent's self-explored replay memory or using demo data. 
-    The variable BETA defines the probability of sampling from either one. This will later be replaced by some importance sampling factor
+    Optimize the Q-networks using the agent's replay memory. 
     '''
+    losses = []
 
-    # print("Sampling from agent's replay memory")
-    batch_transitions = replay_memory.sample(BATCH_SIZE)
+    for i in range(len(replay_memories)):
+        replay_memory = replay_memories[i]
+        policy_net = policy_nets[i]
+        target_net = target_nets[i]
+        optimizer = optimizers[i]
 
-    batch_states = []
-    batch_actions = []
-    batch_rewards = []
-    batch_next_states = []
-    batch_dones = []
+        # print("Sampling from agent's replay memory")
+        batch_transitions = replay_memory.sample(BATCH_SIZE)
 
-    for i in range(BATCH_SIZE):
-        batch_states.append(batch_transitions[i].state)
-        batch_next_states.append(batch_transitions[i].next_state)
-        batch_rewards.append(batch_transitions[i].reward)
-        batch_actions.append(batch_transitions[i].action)
+        batch_states = []
+        batch_actions = []
+        batch_rewards = []
+        batch_next_states = []
+        batch_dones = []
 
-    # batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
-    batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
-    # batch_next_states = torch.reshape(torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
-    batch_next_states = torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True)
-    batch_actions = torch.tensor(np.array(batch_actions))
-    batch_rewards = torch.tensor(np.array(batch_rewards), dtype=torch.float32, requires_grad=True)
-    batch_dones = torch.tensor(np.array(batch_dones))
+        for i in range(BATCH_SIZE):
+            batch_states.append(batch_transitions[i].state)
+            batch_next_states.append(batch_transitions[i].next_state)
+            batch_rewards.append(batch_transitions[i].reward)
+            batch_actions.append(batch_transitions[i].action)
 
-    # print(batch_states.shape)
-    # print(batch_next_states.shape)
-    # print(batch_actions.shape)
-    # print(batch_rewards.shape)
-    # print(batch_dones.shape)
-    batch_states, batch_next_states, batch_rewards, batch_actions = batch_states.to(device), batch_next_states.to(device), batch_rewards.to(device), batch_actions.to(device)
-    loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, batch_dones, GAMMA, large_margin=False)
-    # print(f"Loss: {loss}")
+        # batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
+        batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
+        # batch_next_states = torch.reshape(torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
+        batch_next_states = torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True)
+        batch_actions = torch.tensor(np.array(batch_actions))
+        batch_rewards = torch.tensor(np.array(batch_rewards), dtype=torch.float32, requires_grad=True)
+        batch_dones = torch.tensor(np.array(batch_dones))
 
-    # Optimize the model
-    optimizer.zero_grad()
-    loss.backward()
-    # In-place gradient clipping
-    torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
-    optimizer.step()
-    # print("Optimizer steped ahead")
-    return loss
+        # print(batch_states.shape)
+        # print(batch_next_states.shape)
+        # print(batch_actions.shape)
+        # print(batch_rewards.shape)
+        # print(batch_dones.shape)
+        batch_states, batch_next_states, batch_rewards, batch_actions = batch_states.to(device), batch_next_states.to(device), batch_rewards.to(device), batch_actions.to(device)
+        loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, GAMMA, large_margin=False)
+        # print(f"Loss: {loss}")
+        losses.append(loss)
+
+        # Optimize the model
+        optimizer.zero_grad()
+        loss.backward()
+        # In-place gradient clipping
+        torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
+        optimizer.step()
+        # print("Optimizer steped ahead")
+    
+    return losses

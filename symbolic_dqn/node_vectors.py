@@ -21,3 +21,5 @@ node_vectors = {
 'const': [random.sample(), 0],
 
 }
+
+actions_names = list(node_vectors.keys())
