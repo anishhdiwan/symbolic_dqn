@@ -7,6 +7,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from expression_tree import *
+
 class Environment:
 	'''
 	The environment class is used to create an env object for the first markov decision process that is used to generate trees using DQN.
@@ -15,23 +17,30 @@ class Environment:
 	is the actual gym env. 
 	'''
 
-	def __init__(self, main_env):
+	def __init__(self, main_env, tree_depth=10):
+        
+		# state is a Multitree object 
+        self.state = None 
+		
         # main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
-		self.state = ExpressionTree()
-		self.main_env = main_env
-		self.done = False
-        self.main_env_state = None
+        self.main_env = main_env
+		
+        self.dones = [False, False, False, False]
+        self.tree_depth = tree_depth
+
+        # Reset the main environment
+        self.main_env_state = main_env.reset()[0]
 
 	def reset(self):
-		self.state = ExpressionTree()
+        n_trees = self.main_env.action_space.n # Having one tree per main env action
+		self.state = ExpressionMultiTree(self.tree_depth, n_trees)
 		return self.state
 
-	def step(self, action):
+	def step(self, actions):
+        # actions is a list of tree additions specified by the individual policies corresponding to each tree in the multitree
         if not self.done:
     		self.state, tree_full = self.state.update(action)
-
-            if tree_full:
-                self.done = True
+            self.dones = tree_full
 
             state_eval = self.state.evaluate(self.main_env_state)
     		main_env_action = select_action(state_eval)

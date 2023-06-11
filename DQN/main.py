@@ -38,7 +38,8 @@ save_path = f"saved_models/frame_stack:{FRAME_STACK}_|batch_size:{BATCH_SIZE}_|g
 writer = SummaryWriter(log_dir=logdir)
 
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
-env = model.Environment()
+lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
+env = model.Environment(lander_env)
 
 replay_memory = model.ReplayMemory(5000)
 print("Replay memory & demo replay memory initialized")
