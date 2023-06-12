@@ -1,7 +1,7 @@
 from genepro.node import *
 from genepro import node_impl
 from genepro.multitree import Multitree
-from node_vectors import node_vectors
+from actions import *
 
 class ExpressionMultiTree:
 	'''
@@ -61,7 +61,7 @@ class ExpressionMultiTree:
         # Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
         vectorised_multitree_preorder_trav = []
         for trav in self.multitree_preorder_travs:
-            vectorised_trav = np.zeros((2**self.tree_depth - 1, 2))
+            vectorised_trav = np.zeros((2**self.tree_depth - 1, node_vector_dim))
             for i in range(len(trav)):
                 operator = trav[i]
                 if operator.replace(".", "").isnumeric():
@@ -100,7 +100,7 @@ class ExpressionMultiTree:
 
         # insert the zero node as a child for the plus node at index 0. 
         # By convention, index 0 is the left branch when generating a pre-order traversal
-        root_node.inset_child(zero_node, 0) 
+        root_node.insert_child(zero_node, 0) 
 
         return root_node
 
@@ -137,7 +137,7 @@ class ExpressionMultiTree:
 
         if (tree_root_node.arity > 0) and (len(tree_root_node.children) == 0):
             # if the current node has an arity > 0 and has no children then insert a child node at index 0 (left side)
-            tree_root_node.inset_child(action, 0)
+            tree_root_node.insert_child(action, 0)
             child_added = True
 
         elif tree_root_node.arity - len(tree_root_node.children) == 1: 
@@ -146,14 +146,14 @@ class ExpressionMultiTree:
 
             if len(tree_root_node.children) == 0:
                 # if the node has no children then add a child node at index 0 (left side)
-                tree_root_node.inset_child(action, 0)
+                tree_root_node.insert_child(action, 0)
                 child_added = True
             else:
                 # if the node has a child (which can only be a left child) then repeat for that child. 
                 # if something was still not added (which can happen if the whole left branch is full) then add a right child
                 child_added = self.update_tree(tree_root_node.children[0], action)
                 if not child_added:
-                    tree_root_node.inset_child(action, 1)
+                    tree_root_node.insert_child(action, 1)
 
         elif tree_root_node.arity - len(tree_root_node.children) == 0:
             # if the current node already has its max possible children then repeat for both children

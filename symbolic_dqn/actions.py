@@ -3,6 +3,8 @@
 
 import random
 
+
+node_vector_dim = 2
 node_vectors = {
 	
 '+': [random.random(), 2],

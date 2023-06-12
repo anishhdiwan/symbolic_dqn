@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from expression_tree import *
-from node_vectors import action_names
+from actions import *
 import copy
 
 
@@ -45,25 +45,24 @@ class Environment:
         # actions is a list of tree additions specified by the individual policies corresponding to each tree in the multitree
         if not self.done:
             if False in self.tree_full:
+                tree_full_before_update = self.tree_full
         		self.tree_full = self.state.update(actions)
 
                 state_eval = self.state.evaluate(self.main_env_state)
         		main_env_action = select_main_env_action(state_eval)
 
-                rewards, dones = [], []
+                rewards = []
                 for action in range(self.main_env.action_space.n):
                     copy_env = copy.deepcopy(self.main_env)
                     _, reward, done, _ = copy_env.step(action)
                     rewards.append(reward)
-                    dones.append(done)
 
-                self.main_env_state, _, _, _ = self.main_env.step(main_env_action) 
-                self.done = dones[main_env_action]
+                self.main_env_state, _, _, self.done = self.main_env.step(main_env_action) 
 
                 if not False in self.tree_full:
                     self.done = True
 
-        		return self.state.vectorise_preorder_trav(), rewards, self.done
+        		return self.state.vectorise_preorder_trav(), rewards, self.done, tree_full_before_update
             
             else:
                 self.done = True
