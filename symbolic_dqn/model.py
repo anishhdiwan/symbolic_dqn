@@ -49,6 +49,7 @@ class Environment:
 				self.tree_full = self.state.update(actions, node_instances)
 
 				state_eval = self.state.evaluate(self.main_env_state)
+				print(state_eval)
 				main_env_action = select_main_env_action(state_eval)
 
 				rewards = []
@@ -160,8 +161,6 @@ def select_action(states, EPS, policy_nets, node_instances):
 			# print("Exploiting")
 			with torch.no_grad():
 				action_idx = torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
-				print(action_idx)
-				print(len(action_names))
 				actions.append(action_names[action_idx])
 
 		else:

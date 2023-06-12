@@ -18,7 +18,14 @@ class Plus(Node, nn.Module):
   
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return c_outs[0] + c_outs[1]
+    # return c_outs[0] + c_outs[1]
+
+    if len(c_outs) == 2:
+      return c_outs[0] + c_outs[1]
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
 
 class Minus(Node, nn.Module):
   def __init__(self):
@@ -35,7 +42,14 @@ class Minus(Node, nn.Module):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return c_outs[0] - c_outs[1]
+    # return c_outs[0] - c_outs[1]
+
+    if len(c_outs) == 2:
+      return c_outs[0] - c_outs[1]
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
 
 
 class Times(Node, nn.Module):
@@ -53,7 +67,14 @@ class Times(Node, nn.Module):
   
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.multiply(c_outs[0], c_outs[1])
+    # return torch.multiply(c_outs[0], c_outs[1])
+
+    if len(c_outs) == 2:
+      return torch.multiply(c_outs[0], c_outs[1])
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
 
 
 class Div(Node):
@@ -76,10 +97,20 @@ class Div(Node):
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
     
-    sign_b = torch.sign(c_outs[1])
-    sign_b = torch.where(sign_b == 0, 1, sign_b) 
-    protected_div = sign_b * c_outs[0] / (1e-9 + torch.abs(c_outs[1]))
-    return protected_div
+    # sign_b = torch.sign(c_outs[1])
+    # sign_b = torch.where(sign_b == 0, 1, sign_b) 
+    # protected_div = sign_b * c_outs[0] / (1e-9 + torch.abs(c_outs[1]))
+    # return protected_div
+
+    if len(c_outs) == 2:
+      sign_b = torch.sign(c_outs[1])
+      sign_b = torch.where(sign_b == 0, 1, sign_b) 
+      protected_div = sign_b * c_outs[0] / (1e-9 + torch.abs(c_outs[1]))
+      return protected_div
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
 
 
 
@@ -98,7 +129,13 @@ class Square(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return c_outs[0]**2
+    # return c_outs[0]**2
+
+    if len(c_outs) == 1:
+      return c_outs[0]**2
+    else:
+      return 1e-5
+
     
 class Cube(Node):
   def __init__(self):
@@ -112,6 +149,15 @@ class Cube(Node):
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
     return np.multiply(np.square(c_outs[0]), c_outs[0])
+
+  def get_output_pt(self, X):
+    c_outs = self._get_child_outputs_pt(X)
+    # return c_outs[0]**2
+
+    if len(c_outs) == 1:
+      return c_outs[0]**3
+    else:
+      return 1e-5
 
 
 class Sqrt(Node):
@@ -130,7 +176,14 @@ class Sqrt(Node):
     return np.sqrt(np.abs(c_outs[0]))
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.sqrt(torch.abs(c_outs[0]))
+    # return torch.sqrt(torch.abs(c_outs[0]))
+
+    if len(c_outs) == 1:
+      return torch.sqrt(torch.abs(c_outs[0]))
+    else:
+      return 1e-5
+
+
 
 class Log(Node):
   def __init__(self):
@@ -150,9 +203,14 @@ class Log(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    protected_log = torch.log(torch.abs(c_outs[0]) + 1e-9)
-    return protected_log
+    # protected_log = torch.log(torch.abs(c_outs[0]) + 1e-9)
+    # return protected_log
 
+    if len(c_outs) == 1:
+      protected_log = torch.log(torch.abs(c_outs[0]) + 1e-9)
+      return protected_log
+    else:
+      return 1e-5
 
 class Exp(Node):
   def __init__(self):
@@ -166,6 +224,16 @@ class Exp(Node):
   def get_output(self, X):
     c_outs = self._get_child_outputs(X)
     return np.exp(c_outs[0])
+
+  def get_output_pt(self, X):
+    c_outs = self._get_child_outputs_pt(X)
+    # protected_log = torch.log(torch.abs(c_outs[0]) + 1e-9)
+    # return protected_log
+
+    if len(c_outs) == 1:
+      return torch.exp(c_outs[0])
+    else:
+      return 1e-5
 
 
 class Sin(Node):
@@ -183,7 +251,12 @@ class Sin(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.sin(c_outs[0])
+    # return torch.sin(c_outs[0])
+
+    if len(c_outs) == 1:
+      return torch.sin(c_outs[0])
+    else:
+      return 1e-5
 
 
 class Cos(Node):
@@ -201,7 +274,12 @@ class Cos(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.cos(c_outs[0])
+    # return torch.cos(c_outs[0])
+
+    if len(c_outs) == 1:
+      return torch.cos(c_outs[0])
+    else:
+      return 1e-5
 
 
 class Max(Node):
@@ -219,7 +297,14 @@ class Max(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.max(c_outs[0], c_outs[1])
+    # return torch.max(c_outs[0], c_outs[1])
+
+    if len(c_outs) == 2:
+      return torch.max(c_outs[0], c_outs[1])
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
 
 
 class Min(Node):
@@ -237,7 +322,15 @@ class Min(Node):
 
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
-    return torch.min(c_outs[0], c_outs[1])
+    # return torch.min(c_outs[0], c_outs[1])
+
+    if len(c_outs) == 2:
+      return torch.min(c_outs[0], c_outs[1])
+    elif len(c_outs) == 1:
+      return c_outs[0]
+    else:
+      return 1e-5
+
 
 class Feature(Node, nn.Module):
   def __init__(self,id):
@@ -253,7 +346,7 @@ class Feature(Node, nn.Module):
     return X[:,self.id]
   
   def get_output_pt(self, X):
-    return X[:,self.id]
+    return X[self.id] #X[:,self.id]
 
 
 

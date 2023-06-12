@@ -18,11 +18,11 @@ node_vectors = {
 '**2': [random.random(), 1],
 'sqrt': [random.random(), 1],
 'log': [random.random(), 1],
-# 'exp': [random.random(), 1],
+'exp': [random.random(), 1],
 'sin': [random.random(), 1],
 'cos': [random.random(), 1],
-# 'max': [random.random(), 2],
-# 'min': [random.random(), 2],
+'max': [random.random(), 2],
+'min': [random.random(), 2],
 # 'x_': [random.random(), 0],
 'const': [random.random(), 0]
 
@@ -38,11 +38,11 @@ node_instances = {
 '**2': node_impl.Square(),
 'sqrt': node_impl.Sqrt(),
 'log': node_impl.Log(),
-# 'exp': node_impl.Exp(),
+'exp': node_impl.Exp(),
 'sin': node_impl.Sin(),
 'cos': node_impl.Cos(),
-# 'max': node_impl.Max(),
-# 'min': node_impl.Min(),
+'max': node_impl.Max(),
+'min': node_impl.Min(),
 # 'x_': node_impl.Feature(),
 'const': node_impl.Constant()
 
