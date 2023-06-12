@@ -61,14 +61,17 @@ class ExpressionMultiTree:
         # Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
         vectorised_multitree_preorder_trav = []
         for trav in self.multitree_preorder_travs:
-            vectorised_trav = []
-            for operator in trav:
-                if isinstance(operator, float):
-                    vectorised_trav.append(node_vectors['const'])
+            vectorised_trav = np.zeros((2**self.tree_depth - 1, 2))
+            for i in range(len(trav)):
+                operator = trav[i]
+                if operator.replace(".", "").isnumeric():
+                    vectorised_trav[i] = np.array(node_vectors['const'])
                 elif operator[:2] == "x_":
-                    vectorised_trav.append{node_vectors['x_']}
+                    vectorised_trav[i] = np.array(node_vectors['x_'])
                 else:
-                    vectorised_trav.append(node_vectors[operator])
+                    vectorised_trav[i] = np.array(node_vectors[operator])
+
+            vectorised_multitree_preorder_trav.append(torch.tensor(vectorised_trav, dtype=torch.float32, requires_grad=True))
 
         return vectorised_multitree_preorder_trav
 

@@ -1,13 +1,12 @@
 import torch
 import torch.optim as optim
-import cv2
 import numpy as np
 from tqdm import tqdm
 import psutil
 import gym
 
 import model # Import the classes and functions defined in model.py
-from actions import actions as action_list
+from actions import *
 from torch.utils.tensorboard import SummaryWriter
 
 # Setting up a device
@@ -27,12 +26,12 @@ GAMMA = 0.99
 EPS = 0.01
 TAU = 0.005
 LR = 1e-4
-num_episodes = 20
-num_steps = 1500
-save_checkpoint = 500 # save the model after these many steps
+num_episodes = 10
+num_steps = 500
+save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
-logdir = f"runs/frame_stack:{FRAME_STACK}_|batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
-save_path = f"saved_models/frame_stack:{FRAME_STACK}_|batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
+logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
 
 # Setting up the tensorboard summary writer
 writer = SummaryWriter(log_dir=logdir)
@@ -41,6 +40,9 @@ writer = SummaryWriter(log_dir=logdir)
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 env = model.Environment(lander_env)
 
+
+# Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
+n_observation_feats = (2**env.tree_depth - 1) * 2 
 
 # Defining one Q networks per lunar lander env action
 policy_nets = []
@@ -85,9 +87,9 @@ for i_episode in range(num_episodes):
         # env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
         # to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
         # as per the action picked by softmax action selection
-        next_state, reward, done = env.step(actions)
+        next_states, rewards, done = env.step(actions)
         for i in range(len(replay_memories)):
-            replay_memory.append(states[i], actions[i], reward[i], next_state[i])
+            replay_memory.append(states[i], actions[i], rewards[i], next_states[i])
 
         # Move to the next state
         states = next_states
