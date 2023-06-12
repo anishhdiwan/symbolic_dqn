@@ -99,6 +99,7 @@ class Square(Node):
   def get_output_pt(self, X):
     c_outs = self._get_child_outputs_pt(X)
     return c_outs[0]**2
+    
 class Cube(Node):
   def __init__(self):
     super(Cube,self).__init__()
@@ -253,6 +254,7 @@ class Feature(Node, nn.Module):
   
   def get_output_pt(self, X):
     return X[:,self.id]
+
 
 
 class Constant(Node, nn.Module):

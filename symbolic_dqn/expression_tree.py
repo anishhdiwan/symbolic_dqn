@@ -3,7 +3,8 @@ sys.path.append('../')
 from genepro.node import *
 from genepro import node_impl
 from genepro.multitree import Multitree
-from actions import *
+from actions import node_vectors, node_instances, add_feature_nodes, node_vector_dim
+import copy
 
 class ExpressionMultiTree:
 	'''
@@ -27,7 +28,7 @@ class ExpressionMultiTree:
 	agent will simply learn to add a different operator (or add nothing) at a given spot if the current addition produces poor rewards
 		'''
 
-	def __init__(self, tree_depth: int, n_trees: int):
+	def __init__(self, tree_depth: int, n_trees: int, node_vector_dim: int):
 
 		self.tree_depth = tree_depth # depth of the tree including the root level
 
@@ -37,20 +38,23 @@ class ExpressionMultiTree:
 		self.multitree_preorder_travs = self.get_multitree_preorder_travs(self.multitree)
 		# self.preorder_trav = [None for _ in range(2**tree_depth - 1)] 
 
+		self.node_vector_dim = node_vector_dim
 
-	def update(self, actions):
+
+	def update(self, actions, node_instances):
 		# Update multitree and the pre-order traversal with the performed actions (addition of an operator to each individual tree)
-		assert len(actions) == len(self.multitree.n_trees), "The number of actions must be the same as the number of trees in the multitree"
+		assert len(actions) == self.multitree.n_trees, "The number of actions must be the same as the number of trees in the multitree"
 
 		for i in range(len(actions)):
 			if not self.tree_full[i]:
 				action = actions[i]
-				child_added = update_tree(self.multitree.children[i], action)
+				action = copy.deepcopy(node_instances[action])
+				child_added = self.update_tree(self.multitree.children[i], action)
 				if not child_added:
 					self.tree_full[i] = True
 
 		
-		self.multitree_preorder_travs = get_multitree_preorder_travs(self.multitree)
+		self.multitree_preorder_travs = self.get_multitree_preorder_travs(self.multitree)
 
 		return self.tree_full
 
@@ -63,7 +67,7 @@ class ExpressionMultiTree:
 		# Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
 		vectorised_multitree_preorder_trav = []
 		for trav in self.multitree_preorder_travs:
-			vectorised_trav = np.zeros((2**self.tree_depth - 1, node_vector_dim))
+			vectorised_trav = np.zeros((2**self.tree_depth - 1, self.node_vector_dim))
 			for i in range(len(trav)):
 				operator = trav[i]
 				if operator.replace(".", "").isnumeric():
@@ -137,29 +141,29 @@ class ExpressionMultiTree:
 		# a boolean var to check if a child was added. If after running this function, no child was added then the tree is saturated and the episode needs to end
 		child_added = False 
 
-		if (tree_root_node.arity > 0) and (len(tree_root_node.children) == 0):
+		if (tree_root_node.arity > 0) and (len(tree_root_node._children) == 0):
 			# if the current node has an arity > 0 and has no children then insert a child node at index 0 (left side)
 			tree_root_node.insert_child(action, 0)
 			child_added = True
 
-		elif tree_root_node.arity - len(tree_root_node.children) == 1: 
+		elif tree_root_node.arity - len(tree_root_node._children) == 1: 
 			# if the current node can accomodate one more child 
 			# this can happen for arity 1 nodes with no children or for arity 2 nodes with one child
 
-			if len(tree_root_node.children) == 0:
+			if len(tree_root_node._children) == 0:
 				# if the node has no children then add a child node at index 0 (left side)
 				tree_root_node.insert_child(action, 0)
 				child_added = True
 			else:
 				# if the node has a child (which can only be a left child) then repeat for that child. 
 				# if something was still not added (which can happen if the whole left branch is full) then add a right child
-				child_added = self.update_tree(tree_root_node.children[0], action)
+				child_added = self.update_tree(tree_root_node._children[0], action)
 				if not child_added:
 					tree_root_node.insert_child(action, 1)
 
-		elif tree_root_node.arity - len(tree_root_node.children) == 0:
+		elif tree_root_node.arity - len(tree_root_node._children) == 0:
 			# if the current node already has its max possible children then repeat for both children
-			for child in tree_root_node.children:
+			for child in tree_root_node._children:
 				child_added = self.update_tree(child, action)
 
 		return child_added

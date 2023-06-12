@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from expression_tree import *
-from actions import *
+from actions import add_feature_nodes
 import copy
 
 device = "cuda"
@@ -21,7 +21,7 @@ class Environment:
 	reward upon state transition. The reward is instead relayed to the agent from a second MDP chained up to this one. The second environment
 	is the actual gym env. 
 	'''
-	def __init__(self, main_env, tree_depth=10):
+	def __init__(self, main_env, node_vectors, node_instances, node_vector_dim, tree_depth=10):
 		# state is a Multitree object 
 		self.state = None 
 		# main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
@@ -31,13 +31,14 @@ class Environment:
 		self.tree_full = [False for _ in range(main_env.action_space.n)]
 		self.done = False 
 		self.tree_depth = tree_depth
+		self.node_vector_dim = node_vector_dim
 
 		# Reset the main environment
 		self.main_env_state = main_env.reset()[0]
 
 	def reset(self):
 		n_trees = self.main_env.action_space.n # Having one tree per main env action
-		self.state = ExpressionMultiTree(self.tree_depth, n_trees)
+		self.state = ExpressionMultiTree(self.tree_depth, n_trees, self.node_vector_dim)
 		return self.state.vectorise_preorder_trav()
 
 	def step(self, actions):
@@ -45,7 +46,7 @@ class Environment:
 		if not self.done:
 			if False in self.tree_full:
 				tree_full_before_update = self.tree_full
-				self.tree_full = self.state.update(actions)
+				self.tree_full = self.state.update(actions, node_instances)
 
 				state_eval = self.state.evaluate(self.main_env_state)
 				main_env_action = select_main_env_action(state_eval)
@@ -146,8 +147,9 @@ class DQN_Loss(nn.Module):
 
 
 # Defining epsilon greedy action selection
-def select_action(states, EPS, policy_nets):
+def select_action(states, EPS, policy_nets, node_instances):
 	actions = []
+	action_names = list(node_instances.keys())
 
 	for i in range(len(states)):
 		state = states[i]
@@ -158,6 +160,8 @@ def select_action(states, EPS, policy_nets):
 			# print("Exploiting")
 			with torch.no_grad():
 				action_idx = torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
+				print(action_idx)
+				print(len(action_names))
 				actions.append(action_names[action_idx])
 
 		else:

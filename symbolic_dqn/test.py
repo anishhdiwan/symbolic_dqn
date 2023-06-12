@@ -6,7 +6,8 @@ import psutil
 import gym
 
 import model # Import the classes and functions defined in model.py
-from actions import *
+from actions import node_vectors, node_instances, node_vector_dim, add_feature_nodes
+
 from torch.utils.tensorboard import SummaryWriter
 
 BATCH_SIZE = 32
@@ -20,7 +21,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
-env = model.Environment(lander_env)
+
+node_vectors, node_instances = add_feature_nodes(node_vectors, node_instances, lander_env)
+env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
@@ -45,5 +48,7 @@ print(states[0].shape)
 temp = torch.reshape(states[0], (1,-1))
 print(temp.shape)
 
-actions = model.select_action(states, EPS, policy_nets)
+actions = model.select_action(states, EPS, policy_nets, node_instances)
 print(actions)
+
+next_states, rewards, done, tree_full = env.step(actions)

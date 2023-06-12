@@ -217,7 +217,8 @@ class Node(nn.Module):
       list containing the output of the children, each as a numpy.ndarray
     """
     c_outs = list()
-    for i in range(self.arity):
+    # for i in range(self.arity):
+    for i in range(len(self._children)):
       c_o = self._children[i].get_output_pt(X)
       c_outs.append(c_o)
     return c_outs

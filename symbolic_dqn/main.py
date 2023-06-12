@@ -6,7 +6,8 @@ import psutil
 import gym
 
 import model # Import the classes and functions defined in model.py
-from actions import *
+from actions import node_vectors, node_instances, node_vector_dim, add_feature_nodes
+node_vectors, node_instances = add_feature_nodes(node_vectors, node_instances, main_env)
 from torch.utils.tensorboard import SummaryWriter
 
 # Setting up a device
@@ -38,7 +39,9 @@ writer = SummaryWriter(log_dir=logdir)
 
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
-env = model.Environment(lander_env)
+
+node_vectors, node_instances = add_feature_nodes(node_vectors, node_instances, lander_env)
+env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
@@ -83,7 +86,7 @@ for i_episode in range(num_episodes):
     loop = tqdm(range(num_steps))
     for t in loop:
         loop.set_description(f"Episode {i_episode} Steps | CPU {psutil.cpu_percent()} | RAM {psutil.virtual_memory().percent}")   
-        actions = model.select_action(states, EPS, policy_nets)
+        actions = model.select_action(states, EPS, policy_nets, node_instances)
 
         # env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
         # to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
