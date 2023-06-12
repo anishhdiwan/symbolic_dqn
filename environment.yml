@@ -16,3 +16,5 @@ dependencies:
   - notebook
   - swig
   - gymnasium[box2d]
+  - tensorboard
+  - setuptools==59.5.0

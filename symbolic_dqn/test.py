@@ -1,39 +1,49 @@
+import torch
+import torch.optim as optim
 import numpy as np
-# import torch
-# from actions import *
+from tqdm import tqdm
+import psutil
+import gym
+
+import model # Import the classes and functions defined in model.py
+from actions import *
+from torch.utils.tensorboard import SummaryWriter
+
+BATCH_SIZE = 32
+GAMMA = 0.99
+EPS = 0.01
+TAU = 0.005
+LR = 1e-4
+num_episodes = 10
+num_steps = 500
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Creating the environment (this may take a few minutes) and setting up the data sampling iterator
+lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
+env = model.Environment(lander_env)
 
 
-# tree_depth = 4
-# multitree_preorder_travs = [
+# Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
+n_observation_feats = (2**env.tree_depth - 1) * node_vector_dim
+n_actions = len(node_vectors)
 
-# ['+', '0'],
-# ['+', '0', '-'],
-# ['+', '0', 'log']
+# Defining one Q networks per lunar lander env action
+policy_nets = []
+target_nets = []
+for _ in range(lander_env.action_space.n):
+    policy_net = model.DQN(n_observation_feats, n_actions, BATCH_SIZE).to(device)
+    policy_net = policy_net.float()
+    target_net = model.DQN(n_observation_feats, n_actions, BATCH_SIZE).to(device)
+    target_net.load_state_dict(policy_net.state_dict())
 
-# ]
-
-# def vectorise_preorder_trav():
-#     # Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
-#     vectorised_multitree_preorder_trav = []
-#     for trav in multitree_preorder_travs:
-#         vectorised_trav = np.zeros((2**tree_depth - 1, 2))
-#         for i in range(len(trav)):
-#             operator = trav[i]
-
-#             if operator.replace(".", "").replace("-","").isnumeric():
-#                 vectorised_trav[i] = np.array(node_vectors['const'])
-#             elif operator[:2] == "x_":
-#                 vectorised_trav[i] = np.array(node_vectors['x_'])
-#             else:
-#                 vectorised_trav[i] = np.array(node_vectors[operator])
-
-#         vectorised_multitree_preorder_trav.append(torch.tensor(vectorised_trav, dtype=torch.float32, requires_grad=True))
-
-#     return vectorised_multitree_preorder_trav
+    policy_nets.append(policy_net)
+    target_nets.append(target_net)
 
 
-# temp = vectorise_preorder_trav()
-# print(temp)
-# print(temp[0])
+states = env.reset()
+print(states[0].shape)
+temp = torch.reshape(states[0], (1,-1))
+print(temp.shape)
 
-print(len(np.array([1,2,3])))
+actions = model.select_action(states, EPS, policy_nets)
+print(actions)

@@ -24,4 +24,4 @@ node_vectors = {
 
 }
 
-actions_names = list(node_vectors.keys())
+action_names = list(node_vectors.keys())

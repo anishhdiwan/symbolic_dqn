@@ -42,7 +42,8 @@ env = model.Environment(lander_env)
 
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
-n_observation_feats = (2**env.tree_depth - 1) * node_vector_dims
+n_observation_feats = (2**env.tree_depth - 1) * node_vector_dim
+n_actions = len(node_vectors)
 
 # Defining one Q networks per lunar lander env action
 policy_nets = []
