@@ -55,9 +55,15 @@ class Environment:
 				main_env_action = select_main_env_action(state_eval)
 
 				rewards = []
-				for action in range(self.main_env.action_space.n):
+				#may need to create multiple environments before loop
+				envs = []
+				for _ in range(4): #for every possible action create an environment instance
 					copy_env = copy.deepcopy(self.main_env)
-					_, reward, done, _ = copy_env.step(action)
+					envs.append(copy_env)
+
+				for action in range(self.main_env.action_space.n):
+					#copy_env = copy.deepcopy(self.main_env)
+					_, reward, done, _, _ = envs[action].step(action) #TODO: consolidate terminated and truncated bools into done
 					rewards.append(reward)
 
 				self.main_env_state, _, _, self.done = self.main_env.step(main_env_action) 
