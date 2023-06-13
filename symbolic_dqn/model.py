@@ -175,6 +175,7 @@ def select_action(states, EPS, policy_nets, node_instances):
 def select_main_env_action(state_eval):
 	actions = [0,1,2,3]
 	probabilities = F.softmax(state_eval)
+	probabilities = probabilities.detach().numpy().flatten()
 	return np.random.choice(actions, p=probabilities)
 
 
