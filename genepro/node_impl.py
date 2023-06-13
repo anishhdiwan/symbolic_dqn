@@ -346,7 +346,7 @@ class Feature(Node, nn.Module):
     return X[:,self.id]
   
   def get_output_pt(self, X):
-    return X[self.id] #X[:,self.id]
+    return X[:,self.id] #X[self.id] #
 
 
 

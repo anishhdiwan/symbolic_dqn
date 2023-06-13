@@ -11,7 +11,7 @@ from expression_tree import *
 from actions import add_feature_nodes
 import copy
 
-device = "cuda"
+device = "cpu"
 
 
 class Environment:
@@ -50,7 +50,7 @@ class Environment:
 
 				state_eval = self.state.evaluate(self.main_env_state)
 				print(state_eval)
-				main_env_action = select_main_env_action(state_eval)
+				main_env_action = select_main_env_action(state_eval)[0] #Added index to mirror fitness_function_pt()
 
 				rewards = []
 				for action in range(self.main_env.action_space.n):
