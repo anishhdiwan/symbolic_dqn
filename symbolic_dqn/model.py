@@ -47,10 +47,12 @@ class Environment:
 			if False in self.tree_full:
 				tree_full_before_update = self.tree_full
 				self.tree_full = self.state.update(actions, node_instances)
+				self.main_env_state = torch.from_numpy(self.main_env_state.reshape((1,-1))).float() #create tensor from numpy array for evaluation
 
 				state_eval = self.state.evaluate(self.main_env_state)
+
 				print(state_eval)
-				main_env_action = select_main_env_action(state_eval)[0] #Added index to mirror fitness_function_pt()
+				main_env_action = select_main_env_action(state_eval)
 
 				rewards = []
 				for action in range(self.main_env.action_space.n):
