@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from expression_tree import *
 from actions import add_feature_nodes
 import copy
+import pickle #pickle for cloning environment
 
 device = "cpu"
 
@@ -56,17 +57,22 @@ class Environment:
 
 				rewards = []
 				#may need to create multiple environments before loop
-				envs = []
-				for _ in range(4): #for every possible action create an environment instance
-					copy_env = copy.deepcopy(self.main_env)
-					envs.append(copy_env)
+				#envs = []
+				#for _ in range(4): #for every possible action create an environment instance
+				#	copy_env = copy.deepcopy(self.main_env)
+				#	envs.append(copy_env)
 
 				for action in range(self.main_env.action_space.n):
+					#for action in range(1):
 					#copy_env = copy.deepcopy(self.main_env)
-					_, reward, done, _, _ = envs[action].step(action) #TODO: consolidate terminated and truncated bools into done
+					#copy_env = self.main_env.unwrapped.clone_full_state()
+					#copy_env = pickle.loads(pickle.dumps(self.main_env))
+					copy_env = copy.deepcopy(self.main_env.unwrapped)
+					_, reward, done, _, _ = copy_env.step(action)
+					#_, reward, done, _, _ = copy_env.step(1)
 					rewards.append(reward)
 
-				self.main_env_state, _, _, self.done = self.main_env.step(main_env_action) 
+				self.main_env_state, _, self.done = self.main_env.step(main_env_action)
 
 				if not False in self.tree_full:
 					self.done = True
