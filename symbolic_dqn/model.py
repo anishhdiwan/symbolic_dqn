@@ -109,7 +109,7 @@ class ReplayMemory:
 
 	def sample(self, batch_size):
 		# samle returns a list of transitions with batch_size number of elements
-		print("memory length:",len(self.memory))
+
 		return random.sample(self.memory, batch_size)
 
 	def __len__(self):
