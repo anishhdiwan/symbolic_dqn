@@ -72,7 +72,7 @@ dqn_loss = model.DQN_Loss()
 # Creating one replay memory per policy_net
 replay_memories = []
 for _ in range(len(policy_nets)):
-    replay_memory = model.ReplayMemory()
+    replay_memory = model.ReplayMemory(10000) #added capacity
     replay_memories.append(replay_memory)
 
 
@@ -97,7 +97,8 @@ for i_episode in range(num_episodes):
         next_states, rewards, done, tree_full = env.step(actions)
         for i in range(len(replay_memories)):
             if not tree_full[i]:
-                replay_memory.append(states[i], actions[i], rewards[i], next_states[i])
+                #replay_memories[i].append(states[i], actions[i], rewards[i], next_states[i]) #specified which memory in replay memories
+                replay_memories[i].push(states[i], actions[i], next_states[i], rewards[i]) #should be the correct order to push info
 
         # Move to the next state
         states = next_states
