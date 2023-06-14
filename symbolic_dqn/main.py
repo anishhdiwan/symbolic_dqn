@@ -103,8 +103,9 @@ for i_episode in range(num_episodes):
         #print("memories length:", len(replay_memories))
         for i in range(len(replay_memories)):
             if not tree_full[i]:
+                for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
                 #replay_memories[i].append(states[i], actions[i], rewards[i], next_states[i]) #specified which memory in replay memories
-                replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
+                    replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
         for memory in replay_memories:
             print("len replay mem", len(memory))
         # Move to the next state
