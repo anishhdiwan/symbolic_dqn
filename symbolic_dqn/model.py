@@ -67,9 +67,10 @@ class Environment:
 					#copy_env = copy.deepcopy(self.main_env)
 					#copy_env = self.main_env.unwrapped.clone_full_state()
 					#copy_env = pickle.loads(pickle.dumps(self.main_env))
-					copy_env = copy.deepcopy(self.main_env.unwrapped)
+					#copy_env = copy.deepcopy(self.main_env.unwrapped)
 					#_, reward, done, _, _ = copy_env.step(action)
-					_, reward, done, _, _ = self.main_env.step(action)
+					#_, reward, done, _, _ = self.main_env.step(action)
+					reward = 1 #dummy reward to temporarily bypass cloning bug
 					rewards.append(reward)
 
 				main_observation, _, self.done, _, _ = self.main_env.step(main_env_action)

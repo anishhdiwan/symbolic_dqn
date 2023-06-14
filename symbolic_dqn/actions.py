@@ -23,8 +23,8 @@ node_vectors = {
 'cos': [random.random(), 1],
 'max': [random.random(), 2],
 'min': [random.random(), 2],
-# 'x_': [random.random(), 0],
-'const': [random.random(), 0]
+'x_': [random.random(), 0],
+'const?': [random.random(), 0]
 
 }
 
@@ -44,7 +44,7 @@ node_instances = {
 'max': node_impl.Max(),
 'min': node_impl.Min(),
 # 'x_': node_impl.Feature(),
-'const': node_impl.Constant()
+'const?': node_impl.Constant()
 
 }
 
