@@ -153,7 +153,7 @@ class DQN_Loss(nn.Module):
 		super(DQN_Loss, self).__init__()
 
 
-	def forward(self, policy_net, target_net, states, actions, rewards, next_states, dones, GAMMA):
+	def forward(self, policy_net, target_net, states, actions, rewards, next_states, GAMMA):
 		# 1-step TD loss
 		with torch.no_grad():
 			next_state_max = torch.max(target_net(next_states), dim=1).values
@@ -222,7 +222,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
 			batch_actions.append(batch_transitions[i].action)
-		print("batch actions",batch_actions)
+		#print("batch actions",batch_actions)
 		# batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
 		#batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
 		batch_states = torch.stack(batch_states)

@@ -66,12 +66,12 @@ class ExpressionMultiTree:
 	def vectorise_preorder_trav(self):
 		# Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
 		vectorised_multitree_preorder_trav = []
-		print("multitreee traversal",self.multitree_preorder_travs)
+		#print("multitreee traversal",self.multitree_preorder_travs)
 		for trav in self.multitree_preorder_travs:
 			vectorised_trav = np.zeros((2**self.tree_depth - 1, self.node_vector_dim))
 			for i in range(len(trav)):
 				operator = trav[i]
-				print("converting operator:",operator)
+				#print("converting operator:",operator)
 				if operator is None: #convert Nonetypes to zero
 					operator = "0.0"
 				if operator.replace(".", "").isnumeric():

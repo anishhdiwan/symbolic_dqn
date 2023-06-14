@@ -95,10 +95,10 @@ for i_episode in range(num_episodes):
         # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
         # The env is done if no more state additions are possible, or if the main_env is done. 
         next_states, rewards, done, tree_full = env.step(actions)
-        print("next states",next_states)
-        print("rewards",rewards)
-        print("done",done)
-        print("tree full",tree_full)
+        #print("next states",next_states)
+        #print("rewards",rewards)
+        #print("done",done)
+        #print("tree full",tree_full)
 
         #print("memories length:", len(replay_memories))
         for i in range(len(replay_memories)):
@@ -106,8 +106,8 @@ for i_episode in range(num_episodes):
                 for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
                 #replay_memories[i].append(states[i], actions[i], rewards[i], next_states[i]) #specified which memory in replay memories
                     replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
-        for memory in replay_memories:
-            print("len replay mem", len(memory))
+        #for memory in replay_memories:
+            #print("len replay mem", len(memory))
         # Move to the next state
         states = next_states
 
