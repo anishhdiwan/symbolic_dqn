@@ -222,11 +222,13 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
 			batch_actions.append(batch_transitions[i].action)
-
+		print("batch actions",batch_actions)
 		# batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
-		batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
+		#batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
+		batch_states = torch.stack(batch_states)
 		# batch_next_states = torch.reshape(torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
-		batch_next_states = torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True)
+		#batch_next_states = torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True)
+		batch_next_states = torch.stack(batch_next_states)
 		batch_actions = torch.tensor(np.array(batch_actions))
 		batch_rewards = torch.tensor(np.array(batch_rewards), dtype=torch.float32, requires_grad=True)
 		batch_dones = torch.tensor(np.array(batch_dones))
@@ -247,6 +249,6 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 		# In-place gradient clipping
 		torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
 		optimizer.step()
-		# print("Optimizer steped ahead")
+		print("Optimizer stepped ahead")
 	
 	return losses
