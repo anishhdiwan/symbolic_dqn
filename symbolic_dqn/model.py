@@ -68,12 +68,12 @@ class Environment:
 					#copy_env = self.main_env.unwrapped.clone_full_state()
 					#copy_env = pickle.loads(pickle.dumps(self.main_env))
 					copy_env = copy.deepcopy(self.main_env.unwrapped)
-					_, reward, done, _, _ = copy_env.step(action)
-					#_, reward, done, _, _ = copy_env.step(1)
+					#_, reward, done, _, _ = copy_env.step(action)
+					_, reward, done, _, _ = self.main_env.step(action)
 					rewards.append(reward)
 
-				self.main_env_state, _, self.done = self.main_env.step(main_env_action)
-
+				main_observation, _, self.done, _, _ = self.main_env.step(main_env_action)
+				self.main_env_state = main_observation[0]
 				if not False in self.tree_full:
 					self.done = True
 
