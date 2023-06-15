@@ -12,8 +12,10 @@ from actions import add_feature_nodes, node_indices
 import copy
 import pickle #pickle for cloning environment
 
+# Setting up a device
+# print(f"Is GPU available: {torch.cuda.is_available()}")
+# device = "cuda" if torch.cuda.is_available() else "cpu"
 device = "cpu"
-
 
 class Environment:
 	'''
@@ -52,7 +54,7 @@ class Environment:
 
 				state_eval = self.state.evaluate(self.main_env_state)
 
-				print(state_eval)
+				print(f"State Eval: {state_eval}")
 				main_env_action = select_main_env_action(state_eval)
 
 				rewards = []
@@ -199,8 +201,10 @@ def select_action(states, EPS, policy_nets, node_instances):
 # Defining softmax actions selection for the main environment
 def select_main_env_action(state_eval):
 	actions = [0,1,2,3]
-	probabilities = F.softmax(state_eval)
+	probabilities = F.softmax(state_eval, dim=0)
 	probabilities = probabilities.detach().numpy().flatten()
+	probabilities /= probabilities.sum()	
+
 	return np.random.choice(actions, p=probabilities)
 
 
@@ -220,6 +224,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 
 		# print("Sampling from agent's replay memory")
 		batch_transitions = replay_memory.sample(BATCH_SIZE)
+		print(batch_transitions[0])
 
 		batch_states = []
 		batch_actions = []
