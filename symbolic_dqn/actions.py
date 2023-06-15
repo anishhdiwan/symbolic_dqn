@@ -23,7 +23,7 @@ node_vectors = {
 'cos': [random.random(), 1],
 'max': [random.random(), 2],
 'min': [random.random(), 2],
-#'x_': [random.random(), 0],
+'x_': [random.random(), 0],
 'const?': [random.random(), 0]
 
 }

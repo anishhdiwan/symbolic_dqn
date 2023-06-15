@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from expression_tree import *
-from actions import add_feature_nodes
+from actions import add_feature_nodes, node_indices
 import copy
 import pickle #pickle for cloning environment
 
@@ -221,7 +221,10 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			batch_states.append(batch_transitions[i].state)
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
-			batch_actions.append(batch_transitions[i].action) #TODO: transform the action strings into their indices
+			#print("batch transition.action:",batch_transitions[i].action)
+			#print("transformed action:", np.array(node_indices[batch_transitions[i].action]))
+			#batch_actions.append(batch_transitions[i].action) #TODO: transform the action strings into their indices
+			batch_actions.append(np.array(node_indices[batch_transitions[i].action]))
 		#print("batch actions",batch_actions)
 		# batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
 		#batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)

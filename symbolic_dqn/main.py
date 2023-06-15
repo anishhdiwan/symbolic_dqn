@@ -9,7 +9,7 @@ import model # Import the classes and functions defined in model.py
 from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
 main_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, main_env)
-#from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 
 # Setting up a device
@@ -33,17 +33,18 @@ num_episodes = 10
 num_steps = 500
 save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
-logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+#logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+logdir = f"runs/testing"
 save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
 
 # Setting up the tensorboard summary writer
-#writer = SummaryWriter(log_dir=logdir)
+writer = SummaryWriter(log_dir=logdir)
 
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
-print("node indices",node_indices)
+#print("node indices",node_indices)
 env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
@@ -146,11 +147,11 @@ for i_episode in range(num_episodes):
         # print("--------------")
 
     # Logging episode level metrics
-    #writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
-    #for i in range(len(episode_return)):
-    #    writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+    writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
+    for i in range(len(episode_return)):
+        writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
 
-#writer.close()
+writer.close()
 torch.save(policy_net.state_dict(), save_path)
 
 print('Complete')
