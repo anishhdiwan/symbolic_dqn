@@ -98,8 +98,13 @@ for i_episode in range(num_episodes):
         # to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
         # as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
         # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
-        # The env is done if no more state additions are possible, or if the main_env is done. 
-        next_states, rewards, done, tree_full = env.step(actions)
+        # The env is done if no more state additions are possible, or if the main_env is done.
+        print("actions",actions)
+        #env_update = env.step(actions)
+        #print("env.actions",env_update)
+        #print("shape",env_update.shape)
+        #print("type",type(env_update))
+        next_states, rewards, done, tree_full = env.step(actions) #TODO: pass over step if episode is complete (returns None)
         #print("next states",next_states)
         #print("rewards",rewards)
         #print("done",done)

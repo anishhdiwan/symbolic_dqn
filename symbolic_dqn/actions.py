@@ -23,7 +23,7 @@ node_vectors = {
 'cos': [random.random(), 1],
 'max': [random.random(), 2],
 'min': [random.random(), 2],
-'x_': [random.random(), 0],
+#'x_': [random.random(), 0],
 'const?': [random.random(), 0]
 
 }
@@ -48,7 +48,7 @@ node_instances = {
 
 }
 
-#TODO: create new dictionary for indexing actions, include neg, 0, pos for const
+
 node_indices = {
 
 	'+': 8,
@@ -63,9 +63,10 @@ node_indices = {
 	'cos': 17,
 	'max': 18,
 	'min': 19,
-	'const_neg': 20,
-	'const_zero': 21,
-	'const_pos': 22
+	'const?':20
+	#'const_neg': 20,
+	#'const_zero': 21,
+	#'const_pos': 22
 
 }
 
