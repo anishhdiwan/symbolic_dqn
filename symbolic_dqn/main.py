@@ -31,6 +31,7 @@ TAU = 0.005
 LR = 1e-4
 num_episodes = 10
 num_steps = 500
+current_step = 0
 save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
 #logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
@@ -120,13 +121,13 @@ for i_episode in range(num_episodes):
         
         # Logging step level metrics
         print("rewards:",rewards)
-        for _ in rewards:
+        for reward in rewards:
             episode_return += reward
         
         episode_steps = t
         #for i in range(len(losses)):
-        #    writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], total_steps)
-        total_steps += 1
+        #    writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], current_step)
+        current_step += 1
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
@@ -140,7 +141,7 @@ for i_episode in range(num_episodes):
             target_net.load_state_dict(target_net_state_dict)
             # print("Completed one step of soft update")
         
-            if (total_steps % save_checkpoint) == 0:
+            if (current_step % save_checkpoint) == 0:
                 torch.save(policy_net.state_dict(), save_path + f"_NET{i}")
 
         if done:
