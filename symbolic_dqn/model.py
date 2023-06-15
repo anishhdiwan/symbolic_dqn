@@ -138,9 +138,15 @@ class DQN(nn.Module):
 	def forward(self, x, for_optimization=True):
 		# When using for optimization, a batch of inputs is passed in. In this case, reshape. When using for selecting actions, only one state is 
 		# passed. In this case, the shape is already correctly set. Hence no reshaping is needed.
+		print("x size first", x.shape)
 		if not for_optimization:
-			self.batch_size = 1
-		x = torch.reshape(x, (self.batch_size,-1))
+			non_op_batch_size = 1
+			print("not for optimization")
+			x = torch.reshape(x, (non_op_batch_size, -1))
+		else:
+			x = torch.reshape(x, (self.batch_size, -1))
+		#print("batch size",self.batch_size)
+		print("x size",x.shape)
 		x = F.relu(self.layer1(x))
 		x = F.relu(self.layer2(x))
 		return self.layer3(x)
@@ -158,7 +164,10 @@ class DQN_Loss(nn.Module):
 		with torch.no_grad():
 			next_state_max = torch.max(target_net(next_states), dim=1).values
 
-		targets = rewards + GAMMA * next_state_max 
+		targets = rewards + GAMMA * next_state_max
+		print("actions shape",actions.shape)
+		print("actions new shape:",actions.view(-1,1).shape)
+		#print("gather shape",len(1,actions.view(-1,1)))
 		values = policy_net(states).gather(1,actions.view(-1,1)).view(-1,) #TODO: test if actions shape is okay
 		print("values",values)
 		print("targets",targets)
@@ -179,7 +188,7 @@ def select_action(states, EPS, policy_nets, node_instances):
 			# print("Exploiting")
 			with torch.no_grad():
 				action_idx = torch.argmax(policy_net(state, for_optimization=False), dim=1).item()
-				actions.append(action_names[action_idx])
+				actions.append(action_names[action_idx]) #TODO: find out why list index is sometimes out of range
 
 		else:
 			# print("Exploring")
@@ -222,7 +231,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			batch_states.append(batch_transitions[i].state)
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
-			#print("batch transition.action:",batch_transitions[i].action)
+			print("batch transition.action:",batch_transitions[i].action)
 			#print("transformed action:", np.array(node_indices[batch_transitions[i].action]))
 			#batch_actions.append(batch_transitions[i].action) #TODO: transform the action strings into their indices
 			batch_actions.append(np.array(node_indices[batch_transitions[i].action]))
