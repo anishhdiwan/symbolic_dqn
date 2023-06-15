@@ -48,10 +48,31 @@ node_instances = {
 
 }
 
-def add_feature_nodes(node_vectors, node_instances, main_env):
+#TODO: create new dictionary for indexing actions, include neg, 0, pos for const
+node_indices = {
+
+	'+': 8,
+	'-': 9,
+	'*': 10,
+	'/': 11,
+	'**2': 12,
+	'sqrt': 13,
+	'log': 14,
+	'exp': 15,
+	'sin': 16,
+	'cos': 17,
+	'max': 18,
+	'min': 19,
+	'const_neg': 20,
+	'const_zero': 21,
+	'const_pos': 22
+
+}
+
+def add_feature_nodes(node_vectors, node_instances, node_indices, main_env):
 	for i in range(main_env.observation_space.shape[0]):
 		node_instances['x_' + str(i)] = node_impl.Feature(i)
 		node_vectors['x_' + str(i)] = [random.random(), 0]
+		node_indices['x_' + str(i)] = i
 
-	return node_vectors, node_instances
-
+	return node_vectors, node_instances, node_indices

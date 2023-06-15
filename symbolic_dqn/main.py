@@ -6,10 +6,11 @@ import psutil
 import gymnasium as gym
 
 import model # Import the classes and functions defined in model.py
-from actions import node_vectors, node_instances, node_vector_dim, add_feature_nodes
+from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
 main_env = gym.make("LunarLander-v2", render_mode="rgb_array")
-node_vectors, node_instances = add_feature_nodes(node_vectors, node_instances, main_env) #TODO: define main_env
+node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, main_env)
 #from torch.utils.tensorboard import SummaryWriter
+
 
 # Setting up a device
 print(f"Is GPU available: {torch.cuda.is_available()}")
@@ -41,7 +42,8 @@ save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|ta
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
-node_vectors, node_instances = add_feature_nodes(node_vectors, node_instances, lander_env)
+node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
+print("node indices",node_indices)
 env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 

@@ -159,7 +159,7 @@ class DQN_Loss(nn.Module):
 			next_state_max = torch.max(target_net(next_states), dim=1).values
 
 		targets = rewards + GAMMA * next_state_max 
-		values = policy_net(states).gather(1,actions.view(-1,1)).view(-1,)
+		values = policy_net(states).gather(1,actions.view(-1,1)).view(-1,) #TODO: test if actions shape is okay
 
 		return F.mse_loss(values, targets)
 
@@ -221,7 +221,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			batch_states.append(batch_transitions[i].state)
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
-			batch_actions.append(batch_transitions[i].action)
+			batch_actions.append(batch_transitions[i].action) #TODO: transform the action strings into their indices
 		#print("batch actions",batch_actions)
 		# batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
 		#batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
