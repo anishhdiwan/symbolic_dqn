@@ -160,7 +160,8 @@ class DQN_Loss(nn.Module):
 
 		targets = rewards + GAMMA * next_state_max 
 		values = policy_net(states).gather(1,actions.view(-1,1)).view(-1,) #TODO: test if actions shape is okay
-
+		print("values",values)
+		print("targets",targets)
 		return F.mse_loss(values, targets)
 
 
@@ -242,7 +243,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 		# print(batch_rewards.shape)
 		# print(batch_dones.shape)
 		batch_states, batch_next_states, batch_rewards, batch_actions = batch_states.to(device), batch_next_states.to(device), batch_rewards.to(device), batch_actions.to(device)
-		loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, batch_dones, GAMMA)
+		loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, GAMMA)
 		# print(f"Loss: {loss}")
 		losses.append(loss)
 
