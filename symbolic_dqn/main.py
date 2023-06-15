@@ -31,9 +31,11 @@ TAU = 0.005
 LR = 1e-4
 num_episodes = 10
 num_steps = 500
+current_step = 0
 save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
-logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+#logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+logdir = f"runs/testing"
 save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
 
 # Setting up the tensorboard summary writer
@@ -43,12 +45,13 @@ writer = SummaryWriter(log_dir=logdir)
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
-print("node indices",node_indices)
+#print("node indices",node_indices)
 env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
 n_observation_feats = (2**env.tree_depth - 1) * node_vector_dim
+#print("num ob feat:",n_observation_feats)
 n_actions = len(node_vectors)
 
 # Defining one Q networks per lunar lander env action
@@ -95,8 +98,13 @@ for i_episode in range(num_episodes):
         # to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
         # as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
         # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
-        # The env is done if no more state additions are possible, or if the main_env is done. 
-        next_states, rewards, done, tree_full = env.step(actions)
+        # The env is done if no more state additions are possible, or if the main_env is done.
+        print("actions",actions)
+        #env_update = env.step(actions)
+        #print("env.actions",env_update)
+        #print("shape",env_update.shape)
+        #print("type",type(env_update))
+        next_states, rewards, done, tree_full = env.step(actions) #TODO: pass over step if episode is complete (returns None)
         #print("next states",next_states)
         #print("rewards",rewards)
         #print("done",done)
@@ -118,13 +126,13 @@ for i_episode in range(num_episodes):
         
         # Logging step level metrics
         print("rewards:",rewards)
-        for _ in rewards:
+        for reward in rewards:
             episode_return += reward
         
         episode_steps = t
-        for i in range(len(losses)):
-            writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], total_steps)
-        total_steps += 1
+        #for i in range(len(losses)):
+        #    writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], current_step)
+        current_step += 1
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
@@ -138,7 +146,7 @@ for i_episode in range(num_episodes):
             target_net.load_state_dict(target_net_state_dict)
             # print("Completed one step of soft update")
         
-            if (total_steps % save_checkpoint) == 0:
+            if (current_step % save_checkpoint) == 0:
                 torch.save(policy_net.state_dict(), save_path + f"_NET{i}")
 
         if done:
