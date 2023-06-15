@@ -234,7 +234,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 			print("batch transition.action:",batch_transitions[i].action)
 			#print("transformed action:", np.array(node_indices[batch_transitions[i].action]))
 			#batch_actions.append(batch_transitions[i].action) #TODO: transform the action strings into their indices
-			batch_actions.append(np.array(node_indices[batch_transitions[i].action]))
+			batch_actions.append(node_indices[batch_transitions[i].action])
 		#print("batch actions",batch_actions)
 		# batch_states = torch.reshape(torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
 		#batch_states = torch.tensor(np.array(batch_states), dtype=torch.float32, requires_grad=True)
@@ -242,7 +242,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 		# batch_next_states = torch.reshape(torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True), (BATCH_SIZE,-1))
 		#batch_next_states = torch.tensor(np.array(batch_next_states), dtype=torch.float32, requires_grad=True)
 		batch_next_states = torch.stack(batch_next_states)
-		batch_actions = torch.tensor(np.array(batch_actions))
+		batch_actions = torch.tensor(batch_actions)
 		batch_rewards = torch.tensor(np.array(batch_rewards), dtype=torch.float32, requires_grad=True)
 		batch_dones = torch.tensor(np.array(batch_dones))
 

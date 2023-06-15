@@ -38,7 +38,7 @@ logdir = f"runs/testing"
 save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
 
 # Setting up the tensorboard summary writer
-writer = SummaryWriter(log_dir=logdir)
+#writer = SummaryWriter(log_dir=logdir)
 
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
@@ -124,8 +124,8 @@ for i_episode in range(num_episodes):
             episode_return += reward
         
         episode_steps = t
-        for i in range(len(losses)):
-            writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], total_steps)
+        #for i in range(len(losses)):
+        #    writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], total_steps)
         total_steps += 1
 
         # Soft update of the target network's weights
@@ -148,11 +148,11 @@ for i_episode in range(num_episodes):
         # print("--------------")
 
     # Logging episode level metrics
-    writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
-    for i in range(len(episode_return)):
-        writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+    #writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
+    #for i in range(len(episode_return)):
+    #    writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
 
-writer.close()
+#writer.close()
 torch.save(policy_net.state_dict(), save_path)
 
 print('Complete')
