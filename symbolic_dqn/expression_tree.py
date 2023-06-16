@@ -71,16 +71,13 @@ class ExpressionMultiTree:
 			vectorised_trav = np.zeros((2**self.tree_depth - 1, self.node_vector_dim))
 			for i in range(len(trav)):
 				operator = trav[i]
-				#print("converting operator:",operator)
 				if operator is None: #convert Nonetypes to zero
 					operator = "0.0"
 				if operator.replace(".", "").isnumeric():
 
 					vectorised_trav[i] = np.array(node_vectors['const?'])
 				elif operator[:2] == "x_":
-					#print("x_ operator:",operator)
 					vectorised_trav[i] = np.array(node_vectors[operator])
-					#print("returned vector:",vectorised_trav[i])
 				else:
 					vectorised_trav[i] = np.array(node_vectors[operator])
 

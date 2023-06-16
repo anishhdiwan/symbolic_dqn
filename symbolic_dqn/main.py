@@ -35,9 +35,9 @@ num_steps = 500
 current_step = 0
 save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
-#logdir = f"runs/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}"
+logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 logdir = f"runs/testing"
-save_path = f"saved_models/batch_size:{BATCH_SIZE}_|gamma:{GAMMA}_|eps:{EPS}_|tau:{TAU}_|lr:{LR}_|episodes:{num_episodes}_|steps:{num_steps}_|run:{RUN_NAME}.pt"
+save_path = f"saved_models/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 
 # Setting up the tensorboard summary writer
 writer = SummaryWriter(log_dir=logdir)
@@ -86,6 +86,7 @@ for _ in range(len(policy_nets)):
 # Main function
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
+    print(f"resetting for episode {i_episode}")
     states = env.reset()
     # Metrics
     episode_return = np.array([0,0,0,0])
@@ -100,25 +101,19 @@ for i_episode in range(num_episodes):
         # as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
         # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
         # The env is done if no more state additions are possible, or if the main_env is done.
-        print("actions",actions)
-        #env_update = env.step(actions)
-        #print("env.actions",env_update)
-        #print("shape",env_update.shape)
-        #print("type",type(env_update))
-        next_states, rewards, done, tree_full = env.step(actions) #TODO: pass over step if episode is complete (returns None)
-        #print("next states",next_states)
-        #print("rewards",rewards)
-        #print("done",done)
-        #print("tree full",tree_full)
+        # print("actions",actions)
+        next_states, rewards, done, tree_full_before_step = env.step(actions)
+        # print(f"step {t} next_states")
+        # print(f"step {t} rewards {rewards}")
+        # print(f"step {t} done {done}")
+        # print(f"step {t} tree_full_before_step {tree_full_before_step}")
 
-        #print("memories length:", len(replay_memories))
+
         for i in range(len(replay_memories)):
-            if not tree_full[i]:
+            if not tree_full_before_step[i]:
                 for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
-                #replay_memories[i].append(states[i], actions[i], rewards[i], next_states[i]) #specified which memory in replay memories
                     replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
-        #for memory in replay_memories:
-            #print("len replay mem", len(memory))
+        
         # Move to the next state
         states = next_states
 
@@ -126,7 +121,6 @@ for i_episode in range(num_episodes):
         losses = model.optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, BATCH_SIZE=BATCH_SIZE, GAMMA=GAMMA)       
         
         # Logging step level metrics
-        print("rewards:",rewards)
         for reward in rewards:
             episode_return += reward
         
@@ -148,18 +142,19 @@ for i_episode in range(num_episodes):
             # print("Completed one step of soft update")
         
             if (current_step % save_checkpoint) == 0:
-                torch.save(policy_net.state_dict(), save_path + f"_NET{i}")
+                torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
         if done:
             break
         # print("--------------")
 
     # Logging episode level metrics
-    writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
-    for i in range(len(episode_return)):
-        writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+    # writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
+    # for i in range(len(episode_return)):
+    #     writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
 
 writer.close()
-torch.save(policy_net.state_dict(), save_path)
+for i in range(len(policy_nets)):
+    torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
 print('Complete')
