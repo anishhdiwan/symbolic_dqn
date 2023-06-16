@@ -69,7 +69,8 @@ class Environment:
 						rewards[main_env_action] += reward
 						count += 1
 
-				print(count)
+				# print(count)
+				rewards += count
 
 
 				if not False in self.tree_full:
