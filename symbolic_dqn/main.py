@@ -27,8 +27,8 @@ GAMMA = 0.9
 EPS = 0.05
 TAU = 0.005
 LR = 1e-4
-num_episodes = 1
-num_steps = 10
+num_episodes = 200
+num_steps = 100
 save_checkpoint = 50 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
@@ -134,9 +134,9 @@ for i_episode in range(num_episodes):
                 torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
         if done:
-            print("--------------")
+            # print("--------------")
             break
-        print("--------------")
+        # print("--------------")
 
     # Logging episode level metrics
     writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
