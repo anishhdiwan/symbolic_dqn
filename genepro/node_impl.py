@@ -357,6 +357,7 @@ class Constant(Node, nn.Module):
     self.__value = value
     self.symb = str(value) if value is not None else "const?"
     self.pt_value = None
+    
   def get_value(self):
     if not self.__value:
       # sample uniformly between -5 and +5

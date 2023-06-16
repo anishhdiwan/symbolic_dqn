@@ -29,7 +29,6 @@ TAU = 0.005
 LR = 1e-4
 num_episodes = 10
 num_steps = 500
-current_step = 0
 save_checkpoint = 100 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
@@ -48,7 +47,6 @@ env = model.Environment(lander_env, node_vectors, node_instances, node_vector_di
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
 n_observation_feats = (2**env.tree_depth - 1) * node_vector_dim
-#print("num ob feat:",n_observation_feats)
 n_actions = len(node_vectors)
 
 # Defining one Q networks per lunar lander env action
@@ -78,7 +76,7 @@ for _ in range(len(policy_nets)):
     replay_memories.append(replay_memory)
 
 
-
+total_steps = 0
 # Main function
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
@@ -91,11 +89,13 @@ for i_episode in range(num_episodes):
         loop.set_description(f"Episode {i_episode} Steps | CPU {psutil.cpu_percent()} | RAM {psutil.virtual_memory().percent}")   
         actions = model.select_action(states, EPS, policy_nets, node_instances)
 
-        # env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
-        # to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
-        # as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
-        # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
-        # The env is done if no more state additions are possible, or if the main_env is done.
+        '''
+        - env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
+        to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
+        as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
+        - Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
+        - The env is done if no more state additions are possible, or if the main_env is done.
+        '''
         next_states, rewards, done, tree_full_before_step = env.step(actions)
 
         for i in range(len(replay_memories)):
@@ -110,13 +110,12 @@ for i_episode in range(num_episodes):
         losses = model.optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, node_indices, BATCH_SIZE=BATCH_SIZE, GAMMA=GAMMA)       
         
         # Logging step level metrics
-        for reward in rewards:
-            episode_return += reward
+        episode_return += rewards
         
         episode_steps = t
-        #for i in range(len(losses)):
-        #    writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", loss[i], current_step)
-        current_step += 1
+        for i in range(len(losses)):
+           writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", losses[i], total_steps)
+        total_steps += 1
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′
@@ -130,7 +129,7 @@ for i_episode in range(num_episodes):
             target_net.load_state_dict(target_net_state_dict)
             # print("Completed one step of soft update")
         
-            if (current_step % save_checkpoint) == 0:
+            if (total_steps % save_checkpoint) == 0:
                 torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
         if done:
@@ -138,9 +137,9 @@ for i_episode in range(num_episodes):
         # print("--------------")
 
     # Logging episode level metrics
-    # writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
-    # for i in range(len(episode_return)):
-    #     writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+    writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
+    for i in range(len(episode_return)):
+        writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
 
 writer.close()
 for i in range(len(policy_nets)):

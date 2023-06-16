@@ -10,7 +10,6 @@ class ExpressionMultiTree:
 	'''
 	The ExpressionMultiTree class is used to instantiate symbolic equation objects. These objects act as states in the first MDP. 
 
-
 	- Considering an complete binary tree (one where all non-terminal nodes have exactly 2 children) of empty nodes as the initial state. 
 	This avoids restricting the scope of the expressions that can be generated. 
 

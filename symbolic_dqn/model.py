@@ -35,15 +35,17 @@ class Environment:
 		self.done = False 
 		self.tree_depth = tree_depth
 		self.node_vector_dim = node_vector_dim
+		self.main_env_steps_per_first_env_step = 100
 
 		# Reset the main environment
-		self.main_env_state = main_env.reset()[0]
+		# self.main_env_state = main_env.reset()[0]
+		# print(f"init shape: {self.main_env_state.shape}")
 
 	def reset(self):
 		n_trees = self.main_env.action_space.n # Having one tree per main env action
 		self.done = False
 		self.tree_full = [False for _ in range(self.main_env.action_space.n)]
-		self.main_env_state = self.main_env.reset()[0] 
+		self.main_env_state = torch.from_numpy(self.main_env.reset()[0].reshape((1,-1))).float() #create tensor from numpy array for evaluation
 		self.state = ExpressionMultiTree(self.tree_depth, n_trees, self.node_vector_dim)
 		return self.state.vectorise_preorder_trav()
 
@@ -53,21 +55,18 @@ class Environment:
 			if False in self.tree_full:
 				tree_full_before_update = self.tree_full
 				self.tree_full = self.state.update(actions, node_instances)
-				# print(f" in this step method {self.tree_full}")
-				self.main_env_state = torch.from_numpy(self.main_env_state.reshape((1,-1))).float() #create tensor from numpy array for evaluation
 
-				state_eval = self.state.evaluate(self.main_env_state)
+				rewards = np.array([0,0,0,0])
 
-				# print(f"State Eval: {state_eval}")
-				main_env_action = select_main_env_action(state_eval)
+				# Stepping through k steps of the main env to evaluate the current multi-tree
+				for _ in range(self.main_env_steps_per_first_env_step):
+					if not self.done:
+						state_eval = self.state.evaluate(self.main_env_state)
+						main_env_action = select_main_env_action(state_eval)
+						observation, reward, self.done, _, _ = self.main_env.step(main_env_action)
+						self.main_env_state = torch.from_numpy(observation.reshape((1,-1))).float()
+						rewards[main_env_action] += reward
 
-				rewards = []
-				for action in range(self.main_env.action_space.n):
-					reward = 1 #dummy reward to temporarily bypass cloning bug
-					rewards.append(reward)
-
-				main_observation, _, self.done, _, _ = self.main_env.step(main_env_action)
-				self.main_env_state = main_observation[0]
 				if not False in self.tree_full:
 					self.done = True
 
