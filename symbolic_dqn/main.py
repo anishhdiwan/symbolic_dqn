@@ -23,13 +23,13 @@ device = torch.device("cpu")
 # TAU is the update rate of the target network
 # LR is the learning rate of the optimizer
 BATCH_SIZE = 32
-GAMMA = 0.99
-EPS = 0.01
+GAMMA = 0.9
+EPS = 0.05
 TAU = 0.005
 LR = 1e-4
-num_episodes = 10
-num_steps = 500
-save_checkpoint = 100 # save the model after these many steps
+num_episodes = 1000
+num_steps = 250
+save_checkpoint = 50 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 logdir = f"runs/testing"
