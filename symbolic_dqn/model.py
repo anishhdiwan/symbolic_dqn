@@ -35,7 +35,7 @@ class Environment:
 		self.done = False 
 		self.tree_depth = tree_depth
 		self.node_vector_dim = node_vector_dim
-		self.main_env_steps_per_first_env_step = 500
+		self.main_env_steps_per_first_env_step = 20
 
 		# Reset the main environment
 		# self.main_env_state = main_env.reset()[0]
@@ -47,6 +47,7 @@ class Environment:
 		self.tree_full = [False for _ in range(self.main_env.action_space.n)]
 		self.main_env_state = torch.from_numpy(self.main_env.reset()[0].reshape((1,-1))).float() #create tensor from numpy array for evaluation
 		self.state = ExpressionMultiTree(self.tree_depth, n_trees, self.node_vector_dim)
+		# print(f"reset POT {self.state.multitree_preorder_travs}")
 		return self.state.vectorise_preorder_trav()
 
 	def step(self, actions):
@@ -55,6 +56,9 @@ class Environment:
 			if False in self.tree_full:
 				tree_full_before_update = self.tree_full
 				self.tree_full = self.state.update(actions, node_instances)
+				# print(self.state.multitree_preorder_travs)
+				# print(self.state.multitree.children[0]._children)
+				# print(self.state.multitree.children[0]._children[1]._children) 
 
 				rewards = np.array([0,0,0,0])
 
@@ -64,14 +68,17 @@ class Environment:
 					if not self.done:
 						state_eval = self.state.evaluate(self.main_env_state)
 						main_env_action = select_main_env_action(state_eval)
-						observation, reward, self.done, _, _ = self.main_env.step(main_env_action)
+						# observation, reward, self.done, _, _ = self.main_env.step(main_env_action)
+						observation, reward, done, _, _ = self.main_env.step(main_env_action)
+						if done:
+							# If the main env is completed, reset it
+							observation = self.main_env.reset()[0]
 						self.main_env_state = torch.from_numpy(observation.reshape((1,-1))).float()
 						rewards[main_env_action] += reward
 						count += 1
 
 				# print(count)
 				rewards += count
-
 
 				if not False in self.tree_full:
 					self.done = True

@@ -2,6 +2,8 @@ import numpy as np
 from genepro.node import Node
 import torch
 import torch.nn as nn
+import math
+sign = lambda x: math.copysign(1, x)
 
 class Plus(Node, nn.Module):
   def __init__(self):
@@ -70,7 +72,8 @@ class Times(Node, nn.Module):
     # return torch.multiply(c_outs[0], c_outs[1])
 
     if len(c_outs) == 2:
-      return torch.multiply(c_outs[0], c_outs[1])
+      # return torch.multiply(c_outs[0], c_outs[1])
+      return c_outs[0] * c_outs[1]
     elif len(c_outs) == 1:
       return c_outs[0]
     else:
@@ -103,9 +106,10 @@ class Div(Node):
     # return protected_div
 
     if len(c_outs) == 2:
-      sign_b = torch.sign(c_outs[1])
-      sign_b = torch.where(sign_b == 0, 1, sign_b) 
-      protected_div = sign_b * c_outs[0] / (1e-9 + torch.abs(c_outs[1]))
+      # sign_b = torch.sign(c_outs[1])
+      # sign_b = torch.where(sign_b == 0, 1, sign_b) 
+      sign_b = sign(c_outs[1])
+      protected_div = sign_b * c_outs[0] / (1e-9 + abs(c_outs[1]))
       return protected_div
     elif len(c_outs) == 1:
       return c_outs[0]
@@ -179,7 +183,7 @@ class Sqrt(Node):
     # return torch.sqrt(torch.abs(c_outs[0]))
 
     if len(c_outs) == 1:
-      return torch.sqrt(torch.abs(c_outs[0]))
+      return math.sqrt(abs(c_outs[0]))
     else:
       return 1e-5
 
@@ -207,7 +211,7 @@ class Log(Node):
     # return protected_log
 
     if len(c_outs) == 1:
-      protected_log = torch.log(torch.abs(c_outs[0]) + 1e-9)
+      protected_log = math.log(abs(c_outs[0]) + 1e-9)
       return protected_log
     else:
       return 1e-5
@@ -231,7 +235,7 @@ class Exp(Node):
     # return protected_log
 
     if len(c_outs) == 1:
-      return torch.exp(c_outs[0])
+      return math.exp(c_outs[0])
     else:
       return 1e-5
 
@@ -254,7 +258,7 @@ class Sin(Node):
     # return torch.sin(c_outs[0])
 
     if len(c_outs) == 1:
-      return torch.sin(c_outs[0])
+      return math.sin(c_outs[0])
     else:
       return 1e-5
 
@@ -277,7 +281,7 @@ class Cos(Node):
     # return torch.cos(c_outs[0])
 
     if len(c_outs) == 1:
-      return torch.cos(c_outs[0])
+      return math.cos(c_outs[0])
     else:
       return 1e-5
 
@@ -300,7 +304,7 @@ class Max(Node):
     # return torch.max(c_outs[0], c_outs[1])
 
     if len(c_outs) == 2:
-      return torch.max(c_outs[0], c_outs[1])
+      return max(c_outs[0], c_outs[1])
     elif len(c_outs) == 1:
       return c_outs[0]
     else:
@@ -325,7 +329,7 @@ class Min(Node):
     # return torch.min(c_outs[0], c_outs[1])
 
     if len(c_outs) == 2:
-      return torch.min(c_outs[0], c_outs[1])
+      return min(c_outs[0], c_outs[1])
     elif len(c_outs) == 1:
       return c_outs[0]
     else:
