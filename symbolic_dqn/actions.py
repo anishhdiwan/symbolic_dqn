@@ -7,8 +7,6 @@ import random
 from genepro import node_impl
 
 
-
-node_vector_dim = 2
 node_vectors = {
 	
 '+': [random.random(), 2],
@@ -18,11 +16,11 @@ node_vectors = {
 '**2': [random.random(), 1],
 'sqrt': [random.random(), 1],
 'log': [random.random(), 1],
-'exp': [random.random(), 1],
-'sin': [random.random(), 1],
-'cos': [random.random(), 1],
-'max': [random.random(), 2],
-'min': [random.random(), 2],
+# 'exp': [random.random(), 1],
+# 'sin': [random.random(), 1],
+# 'cos': [random.random(), 1],
+# 'max': [random.random(), 2],
+# 'min': [random.random(), 2],
 #'x_': [random.random(), 0],
 'const?': [random.random(), 0]
 
@@ -37,12 +35,12 @@ node_instances = {
 '/': node_impl.Div(),
 '**2': node_impl.Square(),
 'sqrt': node_impl.Sqrt(),
-'log': node_impl.Log(),
-'exp': node_impl.Exp(),
-'sin': node_impl.Sin(),
-'cos': node_impl.Cos(),
-'max': node_impl.Max(),
-'min': node_impl.Min(),
+# 'log': node_impl.Log(),
+# 'exp': node_impl.Exp(),
+# 'sin': node_impl.Sin(),
+# 'cos': node_impl.Cos(),
+# 'max': node_impl.Max(),
+# 'min': node_impl.Min(),
 # 'x_': node_impl.Feature(),
 'const?': node_impl.Constant()
 
@@ -58,17 +56,20 @@ node_indices = {
 	'**2': 4,
 	'sqrt': 5,
 	'log': 6,
-	'exp': 7,
-	'sin': 8,
-	'cos': 9,
-	'max': 10,
-	'min': 11,
-	'const?':12
-	#'const_neg': 20,
+	# 'exp': 7,
+	# 'sin': 8,
+	# 'cos': 9,
+	# 'max': 10,
+	# 'min': 11,
+	'const?':7
+	# 'const_neg': 20,
 	#'const_zero': 21,
 	#'const_pos': 22
 
 }
+
+
+node_vector_dim = len(node_vectors['+'])
 
 def add_feature_nodes(node_vectors, node_instances, node_indices, main_env):
 	num_nodes = len(node_vectors)

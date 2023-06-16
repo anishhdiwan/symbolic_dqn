@@ -35,7 +35,7 @@ class Environment:
 		self.done = False 
 		self.tree_depth = tree_depth
 		self.node_vector_dim = node_vector_dim
-		self.main_env_steps_per_first_env_step = 100
+		self.main_env_steps_per_first_env_step = 500
 
 		# Reset the main environment
 		# self.main_env_state = main_env.reset()[0]
@@ -59,6 +59,7 @@ class Environment:
 				rewards = np.array([0,0,0,0])
 
 				# Stepping through k steps of the main env to evaluate the current multi-tree
+				count = 0
 				for _ in range(self.main_env_steps_per_first_env_step):
 					if not self.done:
 						state_eval = self.state.evaluate(self.main_env_state)
@@ -66,11 +67,15 @@ class Environment:
 						observation, reward, self.done, _, _ = self.main_env.step(main_env_action)
 						self.main_env_state = torch.from_numpy(observation.reshape((1,-1))).float()
 						rewards[main_env_action] += reward
+						count += 1
+
+				print(count)
+
 
 				if not False in self.tree_full:
 					self.done = True
 
-				return self.state.vectorise_preorder_trav(), rewards, self.done, tree_full_before_update
+				return self.state.vectorise_preorder_trav(), rewards, self.done, tree_full_before_update, count
 			
 			else:
 				self.done = True
