@@ -128,15 +128,21 @@ class DQN(nn.Module):
 		self.batch_size = batch_size
 
 	# Called with either one element to determine next action, or a batch
-	def forward(self, x, for_optimization=True):
+	def forward(self, x, for_optimization=True, batch_size=None):
 		# When using for optimization, a batch of inputs is passed in. In this case, reshape. When using for selecting actions, only one state is 
 		# passed. In this case, the shape is already correctly set. Hence no reshaping is needed.
+
+		# This option enables the model to accept an arbitrary batch size. 
+		# This is useful when sampling a batch of transitions smaller than the preset batch_size (when replay memory has less than batch_size transitions)
+		if batch_size == None:
+			batch_size = self.batch_size
 
 		if not for_optimization:
 			non_op_batch_size = 1
 			x = torch.reshape(x, (non_op_batch_size, -1))
 		else:
-			x = torch.reshape(x, (self.batch_size, -1))
+			x = torch.reshape(x, (batch_size, -1))
+
 		x = F.relu(self.layer1(x))
 		x = F.relu(self.layer2(x))
 		return self.layer3(x)
@@ -149,13 +155,13 @@ class DQN_Loss(nn.Module):
 		super(DQN_Loss, self).__init__()
 
 
-	def forward(self, policy_net, target_net, states, actions, rewards, next_states, GAMMA):
+	def forward(self, policy_net, target_net, states, actions, rewards, next_states, GAMMA, BATCH_SIZE):
 		# 1-step TD loss
 		with torch.no_grad():
-			next_state_max = torch.max(target_net(next_states), dim=1).values
+			next_state_max = torch.max(target_net(next_states, batch_size = BATCH_SIZE), dim=1).values
 
 		targets = rewards + GAMMA * next_state_max
-		values = policy_net(states).gather(0,actions.view(-1,1)).view(-1,)
+		values = policy_net(states, batch_size = BATCH_SIZE).gather(1,actions.view(-1,1)).view(-1,)
 		return F.mse_loss(values, targets)
 
 
@@ -193,7 +199,7 @@ def select_main_env_action(state_eval):
 
 
 # Defining the optimization for the Q-network
-def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, BATCH_SIZE = 32, GAMMA=0.99):
+def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, node_indices, BATCH_SIZE = 32, GAMMA=0.99):
 	'''
 	Optimize the Q-networks using the agent's replay memory. 
 	'''
@@ -201,12 +207,19 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 
 	for i in range(len(replay_memories)):
 		replay_memory = replay_memories[i]
+		
+		# Sample the whole replay memory if it has fewer than BATCH_SIZE number of transitions
+		if len(replay_memory) < BATCH_SIZE:
+			batch_size = len(replay_memory)
+		else:
+			batch_size = BATCH_SIZE
+
 		policy_net = policy_nets[i]
 		target_net = target_nets[i]
 		optimizer = optimizers[i]
 
 		# print("Sampling from agent's replay memory")
-		batch_transitions = replay_memory.sample(BATCH_SIZE)
+		batch_transitions = replay_memory.sample(batch_size)
 
 		batch_states = []
 		batch_actions = []
@@ -214,7 +227,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 		batch_next_states = []
 		batch_dones = []
 
-		for i in range(BATCH_SIZE):
+		for i in range(batch_size):
 			batch_states.append(batch_transitions[i].state)
 			batch_next_states.append(batch_transitions[i].next_state)
 			batch_rewards.append(batch_transitions[i].reward)
@@ -228,7 +241,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 
 
 		batch_states, batch_next_states, batch_rewards, batch_actions = batch_states.to(device), batch_next_states.to(device), batch_rewards.to(device), batch_actions.to(device)
-		loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, GAMMA)
+		loss = dqn_loss(policy_net, target_net, batch_states, batch_actions, batch_rewards, batch_next_states, GAMMA, batch_size)
 		# print(f"Loss: {loss}")
 		losses.append(loss)
 

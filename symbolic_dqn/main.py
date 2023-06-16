@@ -7,10 +7,7 @@ import gymnasium as gym
 
 import model # Import the classes and functions defined in model.py
 from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
-main_env = gym.make("LunarLander-v2", render_mode="rgb_array")
-node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, main_env)
 from torch.utils.tensorboard import SummaryWriter
-
 
 # Setting up a device
 print(f"Is GPU available: {torch.cuda.is_available()}")
@@ -46,7 +43,6 @@ writer = SummaryWriter(log_dir=logdir)
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
-#print("node indices",node_indices)
 env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
@@ -86,7 +82,6 @@ for _ in range(len(policy_nets)):
 # Main function
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
-    print(f"resetting for episode {i_episode}")
     states = env.reset()
     # Metrics
     episode_return = np.array([0,0,0,0])
@@ -101,24 +96,18 @@ for i_episode in range(num_episodes):
         # as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
         # Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
         # The env is done if no more state additions are possible, or if the main_env is done.
-        # print("actions",actions)
         next_states, rewards, done, tree_full_before_step = env.step(actions)
-        # print(f"step {t} next_states")
-        # print(f"step {t} rewards {rewards}")
-        # print(f"step {t} done {done}")
-        # print(f"step {t} tree_full_before_step {tree_full_before_step}")
-
 
         for i in range(len(replay_memories)):
             if not tree_full_before_step[i]:
-                for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
-                    replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
+                # for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
+                replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
         
         # Move to the next state
         states = next_states
 
         # Perform one step of the optimization (on the policy network)
-        losses = model.optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, BATCH_SIZE=BATCH_SIZE, GAMMA=GAMMA)       
+        losses = model.optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_loss, node_indices, BATCH_SIZE=BATCH_SIZE, GAMMA=GAMMA)       
         
         # Logging step level metrics
         for reward in rewards:
