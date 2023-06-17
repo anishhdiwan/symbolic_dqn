@@ -24,7 +24,7 @@ class Environment:
 	reward upon state transition. The reward is instead relayed to the agent from a second MDP chained up to this one. The second environment
 	is the actual gym env. 
 	'''
-	def __init__(self, main_env, node_vectors, node_instances, node_vector_dim, tree_depth=10):
+	def __init__(self, main_env, node_vectors, node_instances, node_vector_dim, tree_depth=10, main_env_steps_per_first_env_step=50):
 		# state is a Multitree object 
 		self.state = None 
 		# main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
@@ -35,7 +35,7 @@ class Environment:
 		self.done = False 
 		self.tree_depth = tree_depth
 		self.node_vector_dim = node_vector_dim
-		self.main_env_steps_per_first_env_step = 50
+		self.main_env_steps_per_first_env_step = main_env_steps_per_first_env_step
 
 		# Reset the main environment
 		# self.main_env_state = main_env.reset()[0]
