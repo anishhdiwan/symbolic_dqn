@@ -23,11 +23,11 @@ device = torch.device("cpu")
 # TAU is the update rate of the target network
 # LR is the learning rate of the optimizer
 BATCH_SIZE = 32
-GAMMA = 0.9
-EPS = 0.05
+GAMMA = 0.99
+EPS = 0.01
 TAU = 0.005
 LR = 1e-4
-num_episodes = 200
+num_episodes = 100
 num_steps = 100
 save_checkpoint = 50 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
@@ -96,7 +96,7 @@ for i_episode in range(num_episodes):
         - Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
         - The env is done if no more state additions are possible, or if the main_env is done.
         '''
-        next_states, rewards, done, tree_full_before_step, main_env_steps = env.step(actions)
+        next_states, rewards, done, tree_full_before_step = env.step(actions)
 
         for i in range(len(replay_memories)):
             if not tree_full_before_step[i]:
@@ -116,7 +116,7 @@ for i_episode in range(num_episodes):
         for i in range(len(losses)):
            writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", losses[i], total_steps)
         total_steps += 1
-        writer.add_scalar(f"Main env steps per multi tree env step", main_env_steps, total_steps)
+        # writer.add_scalar(f"Main env steps per multi tree env step", main_env_steps, total_steps)
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′

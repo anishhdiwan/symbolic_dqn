@@ -235,7 +235,14 @@ class Exp(Node):
     # return protected_log
 
     if len(c_outs) == 1:
-      return math.exp(c_outs[0])
+      # return math.exp(c_outs[0])
+
+      try:
+          ans = math.exp(c_outs[0])
+      except OverflowError:
+          ans = 1e5
+      return ans
+      
     else:
       return 1e-5
 

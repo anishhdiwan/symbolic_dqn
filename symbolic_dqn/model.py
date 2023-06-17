@@ -63,7 +63,7 @@ class Environment:
 				rewards = np.array([0,0,0,0])
 
 				# Stepping through k steps of the main env to evaluate the current multi-tree
-				count = 0
+				# count = 0
 				for _ in range(self.main_env_steps_per_first_env_step):
 					if not self.done:
 						state_eval = self.state.evaluate(self.main_env_state)
@@ -75,15 +75,15 @@ class Environment:
 							observation = self.main_env.reset()[0]
 						self.main_env_state = torch.from_numpy(observation.reshape((1,-1))).float()
 						rewards[main_env_action] += reward
-						count += 1
+						# count += 1
 
 				# print(count)
-				rewards += count
+				# rewards += count
 
 				if not False in self.tree_full:
 					self.done = True
 
-				return self.state.vectorise_preorder_trav(), rewards, self.done, tree_full_before_update, count
+				return self.state.vectorise_preorder_trav(), rewards, self.done, tree_full_before_update
 			
 			else:
 				self.done = True
@@ -202,10 +202,18 @@ def select_action(states, EPS, policy_nets, node_instances):
 # Defining softmax actions selection for the main environment
 def select_main_env_action(state_eval):
 	actions = [0,1,2,3]
-	probabilities = F.softmax(state_eval, dim=0)
-	probabilities = probabilities.detach().numpy().flatten()
-	probabilities /= probabilities.sum()	
+	# probabilities = F.softmax((state_eval - state_eval.max), dim=0)
+	# probabilities = probabilities.detach().numpy().flatten()
+	# probabilities /= probabilities.sum()
 
+	# return np.random.choice(actions, p=probabilities)
+
+	soft = nn.Softmax(dim=-1)
+	probabilities = soft((state_eval/state_eval.max()))
+	probabilities = probabilities.cpu().detach().numpy()[0]
+	if True in np.isnan(probabilities):
+		probabilities = np.array([0.25, 0.25, 0.25, 0.25])
+		
 	return np.random.choice(actions, p=probabilities)
 
 
