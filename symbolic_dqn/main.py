@@ -11,8 +11,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 # Setting up a device
 print(f"Is GPU available: {torch.cuda.is_available()}")
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 # device = "cpu"
 
 

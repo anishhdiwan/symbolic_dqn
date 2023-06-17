@@ -14,8 +14,8 @@ import pickle #pickle for cloning environment
 
 # Setting up a device
 # print(f"Is GPU available: {torch.cuda.is_available()}")
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+# device = "cpu"
 
 class Environment:
 	'''

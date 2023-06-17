@@ -72,7 +72,7 @@ class ExpressionMultiTree:
 				operator = trav[i]
 				if operator is None: #convert Nonetypes to zero
 					operator = "0.0"
-				if operator.replace(".", "").replace("-","").isnumeric():
+				if operator.replace(".", "").replace("-","").replace("e", "").isnumeric():
 					vectorised_trav[i] = np.array(node_vectors['const?'])
 				# elif operator[:2] == "x_":
 				# 	vectorised_trav[i] = np.array(node_vectors[operator])
