@@ -298,7 +298,8 @@ class Node(nn.Module):
       list that is used as container to fill a string with the result of `_get_args_repr` of this node and its descendants
     """
     args = list()
-    for i in range(self.arity):
+    # for i in range(self.arity):
+    for i in range(len(self._children)):
       self._children[i].__get_readable_repr_recursive(repr)
       args.append(repr[0])
     repr[0] = self._get_args_repr(args)
