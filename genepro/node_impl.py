@@ -136,7 +136,14 @@ class Square(Node):
     # return c_outs[0]**2
 
     if len(c_outs) == 1:
-      return c_outs[0]**2
+      # return c_outs[0]**2
+
+      try:
+          ans = c_outs[0]**2
+      except OverflowError:
+          ans = 1e5
+      return ans
+      
     else:
       return 1e-5
 
@@ -242,7 +249,7 @@ class Exp(Node):
       except OverflowError:
           ans = 1e5
       return ans
-      
+
     else:
       return 1e-5
 

@@ -35,7 +35,7 @@ class Environment:
 		self.done = False 
 		self.tree_depth = tree_depth
 		self.node_vector_dim = node_vector_dim
-		self.main_env_steps_per_first_env_step = 20
+		self.main_env_steps_per_first_env_step = 50
 
 		# Reset the main environment
 		# self.main_env_state = main_env.reset()[0]
@@ -213,7 +213,7 @@ def select_main_env_action(state_eval):
 	probabilities = probabilities.cpu().detach().numpy()[0]
 	if True in np.isnan(probabilities):
 		probabilities = np.array([0.25, 0.25, 0.25, 0.25])
-		
+
 	return np.random.choice(actions, p=probabilities)
 
 

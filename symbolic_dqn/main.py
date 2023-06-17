@@ -23,11 +23,11 @@ device = torch.device("cpu")
 # TAU is the update rate of the target network
 # LR is the learning rate of the optimizer
 BATCH_SIZE = 32
-GAMMA = 0.99
-EPS = 0.01
+GAMMA = 0.9
+EPS = 0.05
 TAU = 0.005
-LR = 1e-4
-num_episodes = 100
+LR = 1e-5
+num_episodes = 2000
 num_steps = 100
 save_checkpoint = 50 # save the model after these many steps
 RUN_NAME = "HP_combo_1"
@@ -97,6 +97,7 @@ for i_episode in range(num_episodes):
         - The env is done if no more state additions are possible, or if the main_env is done.
         '''
         next_states, rewards, done, tree_full_before_step = env.step(actions)
+        rewards += t # Adding a small reward if the tree progresses further in the episode
 
         for i in range(len(replay_memories)):
             if not tree_full_before_step[i]:
