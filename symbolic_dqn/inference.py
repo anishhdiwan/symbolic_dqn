@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -5,10 +7,22 @@ import psutil
 import gymnasium as gym
 import pickle
 import model # Import the classes and functions defined in model.py
+import configparser
+
+
+config = configparser.ConfigParser()
+config.read('GP_symbolic_DQN_config.ini')
+params = {}
+for each_section in config.sections():
+	for (each_key, each_val) in config.items(each_section):
+		params[each_key] = each_val
+
+
+
 # from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
 
 
-save_path = "saved_models/batch_size_32_gamma_0.9_eps_0.05_tau_0.005_lr_1e-05_episodes_200_steps_100_run_HP_combo_1"
+# save_path = "saved_models/batch_size_32_gamma_0.9_eps_0.05_tau_0.005_lr_1e-05_episodes_200_steps_100_run_HP_combo_1"
 
 
 
@@ -99,9 +113,8 @@ def neural_guided_multitrees(population_size, save_path, GAMMA=0.9, EPS=0.05, nu
 
 if __name__ == "__main__":
 	population = []
-	pop_size = 64
-	for multitree in neural_guided_multitrees(pop_size, save_path, print_preorder_trav=True):
+	for multitree in neural_guided_multitrees(int(params['pop_size']), params['model_path'], print_preorder_trav=True):
 		population.append(multitree)
 
-	with open('saved_models/saved_multitrees/batch_size_32_gamma_0.9_eps_0.05_tau_0.005_lr_1e-05_episodes_200_steps_100_run_HP_combo_1.pickle', 'wb') as handle:
-	    pickle.dump(population, handle)
+	with open(params['pop_save_path'], 'wb') as handle:
+		pickle.dump(population, handle)

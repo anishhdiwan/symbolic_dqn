@@ -12,3 +12,9 @@ Since this project requires older versions of some packages, it is recommended t
 5. Find out the correct torch version for your system and GPU variant (cuda version). Install it from the [Torch Website](https://pytorch.org/)
 6. Install git via `conda install -c anaconda git` and clone this repo. Enable the python kernel for this environment `python -m ipykernel install --user --name=python3` and start the notebook via `jupyter notebook` 
 7. You can now start playing around with our solution
+
+## Model Training & Inference
+
+The directory `symbolic_dqn` holds all scripts relevant to neural guided population initialisation using DQN. The two scripts of interest are `main.py` and `inference.py`. Run `main.py` to train the model to learn a policy that can generate symbolic regression multitrees. Similarly run `inference.py` to use the saved policy to generate a population of multitrees. The config file `GP_symbolic_DQN_config.ini` within the `symbolic_dqn` directory holds the hyperparameters relevant to training, inference, and subsequent integration with the GP code within `solution.ipynb`.
+
+We have already set up some trained models in this repository. The GP code within `solution.ipynb` loads the population generated from this policy to further evolve trees. Be sure to specify parameters such as pop_size or max_gens through the `GP_symbolic_DQN_config.ini` config file. 

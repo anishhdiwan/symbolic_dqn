@@ -8,6 +8,15 @@ import gymnasium as gym
 import model # Import the classes and functions defined in model.py
 from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
 from torch.utils.tensorboard import SummaryWriter
+import configparser
+
+config = configparser.ConfigParser()
+config.read('GP_symbolic_DQN_config.ini')
+params = {}
+for each_section in config.sections():
+    for (each_key, each_val) in config.items(each_section):
+        params[each_key] = each_val
+
 
 # Setting up a device
 print(f"Is GPU available: {torch.cuda.is_available()}")
@@ -22,18 +31,20 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # EPS is the epsilon greedy exploration probability
 # TAU is the update rate of the target network
 # LR is the learning rate of the optimizer
-BATCH_SIZE = 32
-GAMMA = 0.9
-EPS = 0.05
-TAU = 0.005
-LR = 1e-5
-num_episodes = 2000
-num_steps = 100
-save_checkpoint = 50 # save the model after these many steps
+BATCH_SIZE = int(params['BATCH_SIZE'])
+GAMMA = float(params['GAMMA'])
+EPS = float(params['EPS'])
+TAU = float(params['TAU'])
+LR = float(params['LR'])
+num_episodes = int(params['num_episodes'])
+num_steps = int(params['num_steps'])
+save_checkpoint = int(params['save_checkpoint']) # save the model after these many steps
+
 RUN_NAME = "HP_combo_1"
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 # logdir = f"runs/testing"
 save_path = f"saved_models/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
+# config.set('GP and Inference', 'model_path', save_path)
 
 # Setting up the tensorboard summary writer
 writer = SummaryWriter(log_dir=logdir)
