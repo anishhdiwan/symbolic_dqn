@@ -9,7 +9,7 @@ import model # Import the classes and functions defined in model.py
 from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
 from torch.utils.tensorboard import SummaryWriter
 import configparser
-
+from utils import early_stopping, ewma
 
 # Reading the configuration file to get training params
 config = configparser.ConfigParser()
@@ -40,7 +40,7 @@ num_episodes = int(params['num_episodes'])
 num_steps = int(params['num_steps'])
 save_checkpoint = int(params['save_checkpoint']) # save the model after these many steps
 
-RUN_NAME = "HP_combo_1"
+RUN_NAME = params['run_name']
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 save_path = f"saved_models/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 # config.set('GP and Inference', 'model_path', save_path)
@@ -91,12 +91,14 @@ for _ in range(len(policy_nets)):
 
 
 total_steps = 0
+early_stop = False
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
     states = env.reset()
 
     # Metrics
     episode_return = np.array([0,0,0,0])
+    episode_return_ewma = 0.0
     episode_steps = 0
 
     loop = tqdm(range(num_steps))
@@ -153,11 +155,25 @@ for i_episode in range(num_episodes):
 
     # Logging episode level metrics
     writer.add_scalar("Num Steps vs Episode", episode_steps, i_episode)
+    writer.add_scalar("Sum Episode Return vs Episode", episode_return.sum(), i_episode)
     for i in range(len(episode_return)):
-        writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+        writer.add_scalar(f"Episode Return {i} vs Episode", episode_return[i], i_episode)
+
+    # Easrly stopping 
+    episode_return_ewma = ewma(episode_return, episode_return_ewma, i_episode)
+    if early_stopping(episode_return_ewma, threshold=0, tolerance = 2):
+        print(f"Rewards seem to be consistently above the threshold. Stopping now at episode {i_episode}")
+        early_stop = True
+        for i in range(len(episode_return)):
+            writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+
+        break
 
 writer.close()
-for i in range(len(policy_nets)):
-    torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
+
+# If no early stopping was done, save model
+if not early_stop:
+    for i in range(len(policy_nets)):
+        torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
 print('Complete')
