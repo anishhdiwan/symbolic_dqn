@@ -92,13 +92,13 @@ for _ in range(len(policy_nets)):
 
 total_steps = 0
 early_stop = False
+episode_return_ewma = 0.0
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
     states = env.reset()
 
     # Metrics
     episode_return = np.array([0,0,0,0])
-    episode_return_ewma = 0.0
     episode_steps = 0
 
     loop = tqdm(range(num_steps))
@@ -160,19 +160,20 @@ for i_episode in range(num_episodes):
         writer.add_scalar(f"Episode Return {i} vs Episode", episode_return[i], i_episode)
 
     # Easrly stopping 
-    episode_return_ewma = ewma(episode_return, episode_return_ewma, i_episode)
-    if early_stopping(episode_return_ewma, threshold=0, tolerance = 2):
-        print(f"Rewards seem to be consistently above the threshold. Stopping now at episode {i_episode}")
-        early_stop = True
-        for i in range(len(episode_return)):
-            writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
+    episode_return_ewma = ewma(episode_return.sum(), episode_return_ewma, i_episode)
+    if i_episode > 10:
+        if early_stopping(episode_return.sum(), threshold=500, tolerance = 1):
+            print(f"Rewards seem to be consistently above the threshold. Stopping now at episode {i_episode}")
+            early_stop = True
+            for i in range(len(episode_return)):
+                writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)
 
-        break
+            break
 
 writer.close()
 
 # If no early stopping was done, save model
-if not early_stop:
+if not early_stop:  
     for i in range(len(policy_nets)):
         torch.save(policy_net.state_dict(), save_path + f"_NET{i}" + ".pt")
 
