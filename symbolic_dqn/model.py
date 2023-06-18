@@ -193,7 +193,7 @@ def select_main_env_action(state_eval):
 	actions = [0,1,2,3]
 	soft = nn.Softmax(dim=-1)
 	probabilities = soft((state_eval/state_eval.max()))
-	probabilities = probabilities.cpu().detach().numpy()[0]
+	probabilities = probabilities.cpu().detach().numpy()
 	if True in np.isnan(probabilities):
 		probabilities = np.array([0.25, 0.25, 0.25, 0.25])
 

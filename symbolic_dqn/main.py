@@ -39,6 +39,7 @@ LR = float(params['lr'])
 num_episodes = int(params['num_episodes'])
 num_steps = int(params['num_steps'])
 save_checkpoint = int(params['save_checkpoint']) # save the model after these many steps
+main_env_steps_per_first_env_step = int(params['main_env_steps_per_first_env_step'])
 
 RUN_NAME = params['run_name']
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
@@ -55,7 +56,7 @@ lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
 
 # Creating the MDP1 env
-env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
+env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim, main_env_steps_per_first_env_step=main_env_steps_per_first_env_step)
 
 
 # Number of observation features in the state vector of each tree. The state is the (current pre-order traversal + empty space for a complete binary tree) X dimensionality of each token's vector
@@ -162,8 +163,8 @@ for i_episode in range(num_episodes):
     # Easrly stopping 
     episode_return_ewma = ewma(episode_return.sum(), episode_return_ewma, i_episode)
     if i_episode > 10:
-        if early_stopping(episode_return.sum(), threshold=500, tolerance = 1):
-            print(f"Rewards seem to be consistently above the threshold. Stopping now at episode {i_episode}")
+        if early_stopping(episode_return_ewma, threshold=0, tolerance = 1):
+            print(f"Rewards seem to be consistently above the threshold. Episode return EWMA: {episode_return_ewma}. Stopping now at episode {i_episode}")
             early_stop = True
             for i in range(len(episode_return)):
                 writer.add_scalar(f"Total Episode Return {i} vs Episode", episode_return[i], i_episode)

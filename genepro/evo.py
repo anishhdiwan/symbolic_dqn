@@ -239,6 +239,7 @@ class Evolution:
     """
     # set the start time
     self.start_time = time.time()
+    self.results = []
 
 #     self._initialize_population()
     self._initialize_DQN_population()
@@ -262,3 +263,8 @@ class Evolution:
         print("gen: {},\tbest of gen fitness: {:.3f},\tbest of gen size: {}".format(
             self.num_gens, self.best_of_gens[-1].fitness, len(self.best_of_gens[-1])
             ))        
+
+        gen_fitness = []
+        for individual in self.population:
+          gen_fitness.append(individual.fitness)
+        self.results.append(gen_fitness)

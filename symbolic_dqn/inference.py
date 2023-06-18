@@ -94,7 +94,7 @@ def neural_guided_multitrees(population_size, save_path, EPS=0.2, num_steps=100,
 
 if __name__ == "__main__":
 	population = []
-	for multitree in neural_guided_multitrees(int(params['pop_size']), params['model_path'], EPS=0.05, num_steps=int(params['num_steps']), print_preorder_trav=False):
+	for multitree in neural_guided_multitrees(int(params['pop_size']), params['model_path'], EPS=0.01, num_steps=int(params['num_steps']), print_preorder_trav=False):
 		population.append(multitree)
 
 	with open(params['pop_save_path'], 'wb') as handle:
