@@ -183,6 +183,10 @@ class Evolution:
     # store best at initialization
     best = self.population[np.argmax([t.fitness for t in self.population])]
     self.best_of_gens.append(deepcopy(best))
+    
+    print("Population Initialised!")
+    print(np.array([t.fitness for t in self.population]).mean())
+    print(np.array([t.fitness for t in self.population]).max())
 
   def _perform_generation(self):
     """
@@ -236,7 +240,8 @@ class Evolution:
     # set the start time
     self.start_time = time.time()
 
-    self._initialize_population()
+#     self._initialize_population()
+    self._initialize_DQN_population()
 
     # generational loop
     while not self._must_terminate():

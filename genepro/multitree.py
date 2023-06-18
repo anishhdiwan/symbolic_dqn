@@ -13,9 +13,11 @@ class Multitree(nn.Module):
   def get_output_pt(self, x):
     output = []
     for child in self.children:
-      output.append(child.get_output_pt(x).view(-1,1))
+#       output.append(child.get_output_pt(x).view(-1,1))
+      output.append(child.get_output_pt(x))
 
-    return torch.cat(output,dim=1)
+#     return torch.cat(output,dim=1)
+    return torch.tensor(output)
 
   def get_subtrees_consts(self):
     constants = []
