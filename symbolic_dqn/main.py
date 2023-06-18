@@ -10,6 +10,8 @@ from actions import node_vectors, node_instances, node_indices, node_vector_dim,
 from torch.utils.tensorboard import SummaryWriter
 import configparser
 
+
+# Reading the configuration file to get training params
 config = configparser.ConfigParser()
 config.read('GP_symbolic_DQN_config.ini')
 params = {}
@@ -21,8 +23,6 @@ for each_section in config.sections():
 # Setting up a device
 print(f"Is GPU available: {torch.cuda.is_available()}")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# device = torch.device("cpu")
-# device = "cpu"
 
 
 # Defining model hyper-parameters
@@ -31,18 +31,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # EPS is the epsilon greedy exploration probability
 # TAU is the update rate of the target network
 # LR is the learning rate of the optimizer
-BATCH_SIZE = int(params['BATCH_SIZE'])
-GAMMA = float(params['GAMMA'])
-EPS = float(params['EPS'])
-TAU = float(params['TAU'])
-LR = float(params['LR'])
+BATCH_SIZE = int(params['batch_size'])
+GAMMA = float(params['gamma'])
+EPS = float(params['eps'])
+TAU = float(params['tau'])
+LR = float(params['lr'])
 num_episodes = int(params['num_episodes'])
 num_steps = int(params['num_steps'])
 save_checkpoint = int(params['save_checkpoint']) # save the model after these many steps
 
 RUN_NAME = "HP_combo_1"
 logdir = f"runs/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
-# logdir = f"runs/testing"
 save_path = f"saved_models/batch_size_{BATCH_SIZE}_gamma_{GAMMA}_eps_{EPS}_tau_{TAU}_lr_{LR}_episodes_{num_episodes}_steps_{num_steps}_run_{RUN_NAME}"
 # config.set('GP and Inference', 'model_path', save_path)
 
@@ -52,7 +51,10 @@ writer = SummaryWriter(log_dir=logdir)
 # Creating the environment (this may take a few minutes) and setting up the data sampling iterator
 lander_env = gym.make("LunarLander-v2", render_mode="rgb_array")
 
+# Adding the main env's features to node vectors, instances, and indices
 node_vectors, node_instances, node_indices = add_feature_nodes(node_vectors, node_instances, node_indices, lander_env)
+
+# Creating the MDP1 env
 env = model.Environment(lander_env, node_vectors, node_instances, node_vector_dim)
 
 
@@ -78,6 +80,7 @@ for policy_net in policy_nets:
     optimizer = optim.Adam(policy_net.parameters(), lr=LR) # Weight decay is L2 regularization
     optimizers.append(optimizer)
 
+# Defining the loss
 dqn_loss = model.DQN_Loss()
 
 # Creating one replay memory per policy_net
@@ -88,13 +91,14 @@ for _ in range(len(policy_nets)):
 
 
 total_steps = 0
-# Main function
 for i_episode in range(num_episodes):
     # Initialize the environment and get a list of the states of each tree in the multitree.
     states = env.reset()
+
     # Metrics
     episode_return = np.array([0,0,0,0])
     episode_steps = 0
+
     loop = tqdm(range(num_steps))
     for t in loop:
         loop.set_description(f"Episode {i_episode} Steps | CPU {psutil.cpu_percent()} | RAM {psutil.virtual_memory().percent}")   
@@ -102,17 +106,15 @@ for i_episode in range(num_episodes):
 
         '''
         - env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
-        to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
-        as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
+        to the current state.
+        - done is a boolean indicating if the first environment was completed. 
         - Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
-        - The env is done if no more state additions are possible, or if the main_env is done.
         '''
         next_states, rewards, done, tree_full_before_step = env.step(actions)
         rewards += t # Adding a small reward if the tree progresses further in the episode
 
         for i in range(len(replay_memories)):
             if not tree_full_before_step[i]:
-                # for _ in range(BATCH_SIZE-len(replay_memories[i])): #set up temporary fix to get past empty memory
                 replay_memories[i].push(states[i], actions[i], rewards[i], next_states[i]) #should be the correct order to push info
         
         # Move to the next state
@@ -128,7 +130,6 @@ for i_episode in range(num_episodes):
         for i in range(len(losses)):
            writer.add_scalar(f"Loss: Policy Net {i} vs Total Steps (across all episodes)", losses[i], total_steps)
         total_steps += 1
-        # writer.add_scalar(f"Main env steps per multi tree env step", main_env_steps, total_steps)
 
         # Soft update of the target network's weights
         # θ′ ← τ θ + (1 −τ )θ′

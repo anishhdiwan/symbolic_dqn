@@ -13,20 +13,18 @@ import copy
 import pickle #pickle for cloning environment
 
 # Setting up a device
-# print(f"Is GPU available: {torch.cuda.is_available()}")
 device = "cuda" if torch.cuda.is_available() else "cpu"
-# device = "cpu"
 
 class Environment:
 	'''
 	The environment class is used to create an env object for the first markov decision process that is used to generate trees using DQN.
-	This is a simpler version of the OpenAI gym environment. It returns next states via deterministic transitions and does not return a 
-	reward upon state transition. The reward is instead relayed to the agent from a second MDP chained up to this one. The second environment
-	is the actual gym env. 
+	This is a simpler version of the OpenAI gym environment. It returns next states via deterministic transitions
+	The reward is relayed to the agent from a second MDP chained up to this one (called main_env). main_env is the actual gym env. 
 	'''
 	def __init__(self, main_env, node_vectors, node_instances, node_vector_dim, tree_depth=10, main_env_steps_per_first_env_step=50):
 		# state is a Multitree object 
 		self.state = None 
+
 		# main_env is an instance of the OpenAI gym environment (in this case, lunar lander)
 		self.main_env = main_env
 			
@@ -37,17 +35,13 @@ class Environment:
 		self.node_vector_dim = node_vector_dim
 		self.main_env_steps_per_first_env_step = main_env_steps_per_first_env_step
 
-		# Reset the main environment
-		# self.main_env_state = main_env.reset()[0]
-		# print(f"init shape: {self.main_env_state.shape}")
-
 	def reset(self):
 		n_trees = self.main_env.action_space.n # Having one tree per main env action
 		self.done = False
 		self.tree_full = [False for _ in range(self.main_env.action_space.n)]
 		self.main_env_state = torch.from_numpy(self.main_env.reset()[0].reshape((1,-1))).float() #create tensor from numpy array for evaluation
 		self.state = ExpressionMultiTree(self.tree_depth, n_trees, self.node_vector_dim)
-		# print(f"reset POT {self.state.multitree_preorder_travs}")
+
 		return self.state.vectorise_preorder_trav()
 
 	def step(self, actions):
@@ -56,9 +50,6 @@ class Environment:
 			if False in self.tree_full:
 				tree_full_before_update = self.tree_full
 				self.tree_full = self.state.update(actions, node_instances)
-				# print(self.state.multitree_preorder_travs)
-				# print(self.state.multitree.children[0]._children)
-				# print(self.state.multitree.children[0]._children[1]._children) 
 
 				rewards = np.array([0,0,0,0])
 
@@ -68,7 +59,6 @@ class Environment:
 					if not self.done:
 						state_eval = self.state.evaluate(self.main_env_state)
 						main_env_action = select_main_env_action(state_eval)
-						# observation, reward, self.done, _, _ = self.main_env.step(main_env_action)
 						observation, reward, done, _, _ = self.main_env.step(main_env_action)
 						if done:
 							# If the main env is completed, reset it
@@ -77,7 +67,6 @@ class Environment:
 						rewards[main_env_action] += reward
 						# count += 1
 
-				# print(count)
 				# rewards += count
 
 				if not False in self.tree_full:
@@ -202,12 +191,6 @@ def select_action(states, EPS, policy_nets, node_instances):
 # Defining softmax actions selection for the main environment
 def select_main_env_action(state_eval):
 	actions = [0,1,2,3]
-	# probabilities = F.softmax((state_eval - state_eval.max), dim=0)
-	# probabilities = probabilities.detach().numpy().flatten()
-	# probabilities /= probabilities.sum()
-
-	# return np.random.choice(actions, p=probabilities)
-
 	soft = nn.Softmax(dim=-1)
 	probabilities = soft((state_eval/state_eval.max()))
 	probabilities = probabilities.cpu().detach().numpy()[0]
@@ -269,7 +252,7 @@ def optimize_model(optimizers, policy_nets, target_nets, replay_memories, dqn_lo
 		optimizer.zero_grad()
 		loss.backward()
 		# In-place gradient clipping
-		torch.nn.utils.clip_grad_value_(policy_net.parameters(), 100)
+		torch.nn.utils.clip_grad_value_(policy_net.parameters(), 1000)
 		optimizer.step()
 		# print("Optimizer stepped ahead")
 	

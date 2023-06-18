@@ -31,12 +31,11 @@ class ExpressionMultiTree:
 
 		self.tree_depth = tree_depth # depth of the tree including the root level
 
+		# Initialising empty complete binary trees
 		self.multitree = self.init_multitree(n_trees)
 		self.tree_full = [False, False, False, False]
 
 		self.multitree_preorder_travs = self.get_multitree_preorder_travs(self.multitree)
-		# self.preorder_trav = [None for _ in range(2**tree_depth - 1)] 
-		# print(self.multitree_preorder_travs)
 
 		self.node_vector_dim = node_vector_dim
 
@@ -65,7 +64,7 @@ class ExpressionMultiTree:
 	def vectorise_preorder_trav(self):
 		# Turn the preorder traversal of the tree (list of nodes that are operator tokens) into a vector representation
 		vectorised_multitree_preorder_trav = []
-		#print("multitreee traversal",self.multitree_preorder_travs)
+
 		for trav in self.multitree_preorder_travs:
 			vectorised_trav = np.zeros((2**self.tree_depth - 1, self.node_vector_dim))
 			for i in range(len(trav)):
@@ -74,8 +73,6 @@ class ExpressionMultiTree:
 					operator = "0.0"
 				if operator.replace(".", "").replace("-","").replace("e", "").isnumeric():
 					vectorised_trav[i] = np.array(node_vectors['const?'])
-				# elif operator[:2] == "x_":
-				# 	vectorised_trav[i] = np.array(node_vectors[operator])
 				else:
 					vectorised_trav[i] = np.array(node_vectors[operator])
 

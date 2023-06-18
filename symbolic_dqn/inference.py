@@ -19,14 +19,7 @@ for each_section in config.sections():
 
 
 
-# from actions import node_vectors, node_instances, node_indices, node_vector_dim, add_feature_nodes
-
-
-# save_path = "saved_models/batch_size_32_gamma_0.9_eps_0.05_tau_0.005_lr_1e-05_episodes_200_steps_100_run_HP_combo_1"
-
-
-
-def neural_guided_multitrees(population_size, save_path, GAMMA=0.9, EPS=0.05, num_steps=100, print_preorder_trav=False):
+def neural_guided_multitrees(population_size, save_path, EPS=0.2, num_steps=100, print_preorder_trav=False):
 	'''
 	Generator function to use the learnt policies from save_path to generate a multitree. Returns the multi-tree and prints its preorder traversal
 	population_size: int - number of multitrees to return
@@ -40,17 +33,13 @@ def neural_guided_multitrees(population_size, save_path, GAMMA=0.9, EPS=0.05, nu
 	# Setting up a device
 	# print(f"Is GPU available: {torch.cuda.is_available()}")
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-	# device = torch.device("cpu")
-	# device = "cpu"
 
 	# BATCH_SIZE is not used during inference. But it is kept here as it is an argument to the policy network in some cases (does not affect inference)
-	# GAMMA is the discount factor
-	# EPS is the epsilon greedy exploration probability
+	# EPS is the epsilon greedy exploration probability. NOTE: Epsilon can be used to vary the diversity of the generated population. High EPS corresponds to more diversity
 	# num_steps is the number of steps to run during inference. Larger num_steps corresponds to larger trees
 
-	# Best to set these hyperparam to the values used while training the model being used for inference
+	# Best to set these hyperparam to the values used while training the model being used for inference. Except for EPS
 	BATCH_SIZE = 32
-	GAMMA = GAMMA
 	EPS = EPS
 	num_steps = num_steps
 
@@ -85,15 +74,7 @@ def neural_guided_multitrees(population_size, save_path, GAMMA=0.9, EPS=0.05, nu
 			loop.set_description(f"Episode Steps | CPU {psutil.cpu_percent()} | RAM {psutil.virtual_memory().percent}")   
 			actions = model.select_action(states, EPS, policy_nets, node_instances)
 
-			'''
-			- env.step() returns all updated state vectors and the reward and done status upon applying the actions from all individual trees
-			to the current state. We store all of these transitions in the replay buffer but only progress to the next state in the second MDP
-			as per the action picked by softmax action selection. done is a boolean indicating if the first environment was completed. 
-			- Individual replay buffers are filled with the state, action (operation addition), reward (from deep copies), and next state if those trees were not already full
-			- The env is done if no more state additions are possible, or if the main_env is done.
-			'''
 			next_states, rewards, done, tree_full_before_step = env.step(actions)
-			# rewards += t # Adding a small reward if the tree progresses further in the episode
 
 			# Move to the next state
 			states = next_states
@@ -113,7 +94,7 @@ def neural_guided_multitrees(population_size, save_path, GAMMA=0.9, EPS=0.05, nu
 
 if __name__ == "__main__":
 	population = []
-	for multitree in neural_guided_multitrees(int(params['pop_size']), params['model_path'], print_preorder_trav=True):
+	for multitree in neural_guided_multitrees(int(params['pop_size']), params['model_path'], EPS=0.2, num_steps=int(params['num_steps']), print_preorder_trav=True):
 		population.append(multitree)
 
 	with open(params['pop_save_path'], 'wb') as handle:
