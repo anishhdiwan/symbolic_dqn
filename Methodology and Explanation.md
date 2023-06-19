@@ -23,7 +23,7 @@ The reward $R$ obtained in every step of the second MDP is associated with the s
 - **Population Generation:** A population of multitrees is generated with the learnt policies after training. The diversity of this population can be controlled by varying the $\epsilon$ parameter of $\epsilon$-greedy action selection. A higher value corresponds to a more diverse population.
 
 
-![]()
+![](https://github.com/anishhdiwan/symbolic_dqn/blob/main/flowchart.svg)
 
 
 [1] Mundhenk TN, Landajuela M, Glatt R, Santiago CP, Faissol DM, Petersen BK. Symbolic regression via neural-guided genetic programming population seeding. arXiv preprint arXiv:2111.00053. 2021 Oct 29.
