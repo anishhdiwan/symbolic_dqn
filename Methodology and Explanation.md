@@ -7,7 +7,8 @@ This document briefly explains the mathematical formulation for this approach an
 A reason for the poor solution quality of standard Genetic Programming (GP) in the Lunar Lander Env could be because the population within GP is randomly initialised. Random initialisation introduces a significant amount of stochasticity in the outcomes. This results in some test runs being more successful just by random chance that good combinations of nodes are chosen before evolution takes place. The proposed improvement of this is to start with a fitter initial population of solutions such as described in [1] and [2]. This leads to the following hypothesis: 
 
 
-*** It is expected that a better-than-random initial population of solutions will improve much faster with GP as the selection and crossover steps would combine parent solutions that are already much fitter than before. This will also reduce some of the stochasticity in evolution as GP will not have to rely on chance to be able to select a fitter combination of nodes. ***
+**It is expected that a better-than-random initial population of solutions will improve much faster with GP as the selection and crossover steps would combine parent solutions that are already much fitter than before. This will also reduce some of the stochasticity in evolution as GP will not have to rely on chance to be able to select a fitter combination of nodes. 
+**
 
 To come up with a better-than-random initial population of solutions, it is proposed to use Deep Q-Networks [3] to learn a policy that can generate a tree with relatively high fitness. Consider a chain of two Markov decision processes (MDPs). The first MDP S, A, R, T, $\gamma$ pertains to the RL problem that returns neural-guided trees while the second MDP S', A', R, T', $\gamma'$ pertains to the actual lunar lander environment (here S, A, R, T, $\gamma$ refer to the discrete set of states, actions, reward function, transition probabilities, and discount factor).
 
