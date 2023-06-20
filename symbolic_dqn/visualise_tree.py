@@ -113,7 +113,7 @@ pt(root)
 print(''' 
 	''')
 sleep(1)
-os.system('cls')
+
 
 
 
